@@ -354,6 +354,50 @@ local RickValues =
     Tired = {},
 }
 
+if not StageAPI then
+    print("Need StageAPI to work!")
+    StageAPI.AddCallback("LOVESICK", "POST_ROOM_LOAD", 2, function(newRoom)
+        if StageAPI.CustomStage("Limbo"):IsStage() then
+            print("IsLimbo")
+        end
+    end)
+else
+StageAPI.AddPlayerGraphicsInfo(rickId, {
+    Portrait = "gfx/ui/stage/playerportrait_rick.png",
+    Name = "gfx/ui/boss/playername_rick.png",
+    PortraitBig = "gfx/ui/stage/playerportrait_rick.png",
+    NoShake = false
+})
+StageAPI.AddBossData("Dummy",{
+    Name = "Dummy",
+    Portrait = "gfx/ui/boss/playerportrait_rick_b.png"  ,
+    BossName = "gfx/ui/boss/playername_seven_b.png" ,
+    Rooms = StageAPI.RoomsList("PunchBag_1", require("resources.luarooms.reaction"))  ,
+})
+local LimboBG = StageAPI.BackdropHelper({
+    Walls = {"1", "2", "3"}, -- you can add more, or remove some
+    NFloors = {"nfloor"},
+    LFloors = {"lfloor"},
+    Corners = {"corner"}
+}, "gfx/floors/Limbo/Limbo", ".png") -- the first one path to the graphics, as well as the beginning of the filename.
+local LimboGrid = StageAPI.GridGfx()
+--Music.factorySong = Isaac.GetMusicIdByName("floorsecret")
+LimboGrid:SetRocks("gfx/grid/rocks_basement.png")
+local LimboGFX = StageAPI.RoomGfx(LimboBG, LimboGrid, "_default", "stageapi/shading/shading")
+local LimboFloor = StageAPI.CustomStage("Limbo") -- finally defining the floor.
+LimboFloor:SetRoomGfx(LimboGFX, {RoomType.ROOM_DEFAULT, RoomType.ROOM_TREASURE, RoomType.ROOM_MINIBOSS, RoomType.ROOM_BOSS}) 
+--LimboFloor:SetStageMusic(Music.MUSIC_CATHEDRAL, {RoomType.ROOM_DEFAULT, RoomType.ROOM_TREASURE, RoomType.ROOM_MINIBOSS, RoomType.ROOM_BOSS}) 
+LimboFloor:SetBossMusic(Music.MUSIC_CATHEDRAL, Music.MUSIC_BOSS_OVER)
+LimboFloor:SetReplace(StageAPI.StageOverride.NecropolisTwo) -- the annoying part. we'll get to that later.
+LimboFloor:SetSpots("gfx/floors/Limbo/bossspot_Limbo.png", "gfx/floors/Limbo/playerspot_Limbo.png")
+--LimboFloor:SetStageNumber(2,1)
+LimboFloor:SetRooms(StageAPI.RoomsList("Limbo_rooms", include("resources.luarooms.limbo"))) -- we'll get to this later!
+--LimboFloor:SetBosses({"Dummy"}) -- we'll get to this later!
+print(StageAPI,"StageAPI LODED?")
+
+end
+
+
 if RDFIXES ~= nil then
     HasFixes = true
 end
@@ -1270,6 +1314,9 @@ function LOVESICK:PickupKill(pickup) --from epiphany mod, thanks and all credit 
 end
 
 function  LOVESICK:OnNewRoom()
+    if StageAPI.CustomStage("Limbo"):IsStage() then
+        print("Limbo")
+    end
     for p = 0, game:GetNumPlayers() - 1 do
         local player = Isaac.GetPlayer(p)
         if RickValues.Tired[p] == 2 then 
@@ -2349,7 +2396,7 @@ end
 
 function LOVESICK:OnNewStage()
     LOVESICK:ReloadDataNeeded()
-    --print("stage")
+    print("stage")
     for p = 0, game:GetNumPlayers() - 1 do
         local player = Isaac.GetPlayer(p)
         if player:HasCollectible(Isaac.GetItemIdByName("Box of Leftovers"),false) then
@@ -2632,29 +2679,8 @@ end
 LOVESICK:AddCallback(ModCallbacks.MC_USE_ITEM, LOVESICK.RestoreHairOnDice, CollectibleType.COLLECTIBLE_D4)
 LOVESICK:AddCallback(ModCallbacks.MC_USE_ITEM, LOVESICK.RestoreHairOnDice, CollectibleType.COLLECTIBLE_D100)
 
-function LOVESICK:AfterTear()
-    --HeartBeat()
-    --print(FPS)
-    for p=0, game:GetNumPlayers()-1 do
-        local player= Isaac.GetPlayer(p)
-        --if player:GetPlayerType() == rickId then
-            local ActiveEnemies = 0
-            for _, ent in pairs(Isaac.GetRoomEntities()) do
-                if ent:IsActiveEnemy(false) then
-                    ActiveEnemies = ActiveEnemies + 1
-                end
-            end
-            --print("tear")
-            --StageAPI.SpawnCustomTrapdoor(game:GetRoom():GetCenterPos(),StageAPI.CustomStage("Limbo"), "gfx/grid/limbotrapdoor.anm2", 1, false)
-            --StageAPI.GotoCustomStage(StageAPI.CustomStage("Limbo"), true)
-            --local portal =StageAPI.SpawnCustomTrapdoor(game:GetRoom():GetCenterPos(),StageAPI.CustomStage("Limbo"), "gfx/grid/limbotrapdoor.anm2", 1, false)
-            --portal:GetSprite():Play("Opened",true)     
 
-            --print(runSave.persistent.MegasatanIsDead)
-        --end
-    end
-end
-LOVESICK:AddCallback(ModCallbacks.MC_POST_FIRE_TEAR, LOVESICK.AfterTear)
+
 
 function GetCurrentDimension() -- KingBobson: (get room dimension)
     --- get current dimension of room
@@ -2681,10 +2707,36 @@ local modConfigMenu = require("Lovesick_src.mod_compat.modconfigmenu")  --define
 LOVESICK.LoadModData()      --Preload data to load settings into modConfigMenu
 modConfigMenu:AddModConfigOptions(dataCache.file.settings,HasFixes)     --Execute ModConfigMenu Function with the table of settings, and if it has Standalone Rick_Fixes
 
-print("Lovesick Loaded, Vers.".. Version)
+print("Lovesick Loaded, V.".. Version)
 
 
 
 
+
+
+
+function LOVESICK:AfterTear()
+    --HeartBeat()
+    --print(FPS)
+    for p=0, game:GetNumPlayers()-1 do
+        local player= Isaac.GetPlayer(p)
+        --if player:GetPlayerType() == rickId then
+            local ActiveEnemies = 0
+            for _, ent in pairs(Isaac.GetRoomEntities()) do
+                if ent:IsActiveEnemy(false) then
+                    ActiveEnemies = ActiveEnemies + 1
+                end
+            end
+            --print("tear")
+            --StageAPI.SpawnCustomTrapdoor(game:GetRoom():GetCenterPos(),StageAPI.CustomStage("Glacier"), "gfx/grid/limbo_trapdoor.anm2", 24, false)
+            StageAPI.GotoCustomStage(StageAPI.CustomStage("Limbo"), false)
+            --local portal =StageAPI.SpawnCustomTrapdoor(game:GetRoom():GetCenterPos(),StageAPI.CustomStage("Limbo"), "gfx/grid/limbotrapdoor.anm2", 1, false)
+            --portal:GetSprite():Play("Opened",true)     
+
+            --print(runSave.persistent.MegasatanIsDead)
+        --end
+    end
+end
+LOVESICK:AddCallback(ModCallbacks.MC_POST_FIRE_TEAR, LOVESICK.AfterTear)
 
 
