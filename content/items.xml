@@ -1,0 +1,18 @@
+<items gfxroot="gfx/items/" version="1" deathanm2="gfx/death items.anm2">
+  <!--Trinkets-->
+  <trinket id="1001" name="Paper Rose" description="A gift of dedication"  gfx="001_paper_rose.png" cache="luck damage" />
+  <!--Actives-->
+  <active id="1" name="Locked Heart" description="Under lock and key" gfx="001_locked_heart.png" maxcharges="15" chargetype="special" quality="3" persistent="True" hidden="true" craftquality="-1" />
+  <active id="5" name="Morphine" description="I will feel nothing" gfx="005_morphine.png" maxcharges="0" quality="4" devilprice="2" />
+  <active id="3" name="Love Letter" description="I put my heart on this" gfx="003_love_letter.png" maxcharges="0" quality="2" />
+  <active id="6" name="Sleeping Pills" description="I feel drowzi a bisthh..." gfx="006_sleeping_pills.png" quality="3" blackhearts="2"  maxcharges="12" />
+  <!--Passives-->
+  <familiar id="10" name="Kind Soul" description="Only a soul but still a friend" gfx="010_kind_soul.png" quality="3" cache="familiars" maxcharges="6"/>
+  <!--Passives-->
+  <passive id="2" name="Painting Kit" description="Continue her legacy..." gfx="002_painting_kit.png" quality="2" cache="firedelay tearflag shotspeed" />
+  <passive id="4" name="Box of Leftovers" description="Knick-knack stuff" gfx="004_box_of_leftovers.png" quality="1" cache="" bombs="1" keys="1" />
+  <passive id="7" name="Arrest Warrant" description="Claim the bounty before they claim yours" gfx="007_arrest_warrant.png" quality="2" cache="" coins="3" />
+  <passive id="8" name="Sunset Clock" description="Let the sun wake you up" gfx="008_sunset_clock.png" quality="3" cache="all" hearts="6" shopprice="15" />
+  <passive id="9" name="Birthday Cake" description="Happy birthday to me.." gfx="009_birthday_cake.png" quality="0" cache="" maxhearts="1" hearts="2" />
+  <passive id="11" name="Neck Gaiter" description="Show no emotion" gfx="011_neck_gaiter.png" quality="2" cache="damage speed" blackhearts="2" addcostumeonpickup="true" />
+</items>

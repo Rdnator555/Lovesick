@@ -1,0 +1,5 @@
+<entities anm2root="gfx/" version="5">
+    <entity id="3" variant="7001" name="Kind Soul" baseHP="6" shutdoors="false" stageHP="0" boss="0" champion="0" collisionDamage="0" collisionMass="100" collisionRadius="20" friction="1" numGridCollisionPoints="12" shadowSize="15" anm2path="Kind_Soul.anm2" tags="noreroll cansacrifice">
+        <gibs amount="8" blood="0" bone="0" eye="0" gut="0" large="0" rock="0" dust="10"/>
+    </entity>
+</entities>

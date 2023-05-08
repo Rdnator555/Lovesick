@@ -1,0 +1,71 @@
+<ItemPools>
+    <Pool Name="treasure">
+        <Item Name="Love Letter" Weight="0.5" DecreaseBy="0.5" RemoveOn="0.05" />
+        <Item Name="Box of Leftovers" Weight="1" DecreaseBy="1" RemoveOn="0.1" />
+        <Item Name="Birthday Cake" Weight="1" DecreaseBy="1" RemoveOn="0.1" />
+        <Item Name="Neck Gaiter" Weight="1" DecreaseBy="1" RemoveOn="0.1" />
+    </Pool>
+    <Pool Name="greedTreasure">
+        <Item Name="Love Letter" Weight="0.5" DecreaseBy="0.5" RemoveOn="0.05" />
+        <Item Name="Box of Leftovers" Weight="1" DecreaseBy="1" RemoveOn="0.1" />
+        <Item Name="Birthday Cake" Weight="1" DecreaseBy="1" RemoveOn="0.1" />
+        <Item Name="Neck Gaiter" Weight="1" DecreaseBy="1" RemoveOn="0.1" />
+    </Pool>
+    <Pool Name="boss">
+        <Item Name="Box of Leftovers" Weight="0.5" DecreaseBy="0.5" RemoveOn="0.05" />
+        <Item Name="Painting Kit" Weight="1" DecreaseBy="1" RemoveOn="0.1" />
+        <Item Name="Birthday Cake" Weight="1" DecreaseBy="1" RemoveOn="0.1" />
+        <Item Name="Neck Gaiter" Weight="1" DecreaseBy="1" RemoveOn="0.1" />
+    </Pool>
+    <Pool Name="devil">
+        <Item Name="Arrest Warrant" Weight="1" DecreaseBy="0.5" RemoveOn="0.1"/>
+        <Item Name="Morphine" Weight="0.5" DecreaseBy="0.5" RemoveOn="0.05" />
+    </Pool>
+    <Pool Name="greedDevil">
+        <Item Name="Arrest Warrant" Weight="1" DecreaseBy="0.5" RemoveOn="0.1"/>
+        <Item Name="Morphine" Weight="0.5" DecreaseBy="0.5" RemoveOn="0.05" />
+    </Pool>
+    <Pool Name="angel">
+        <Item Name="Kind Soul" Weight="1" DecreaseBy="1" RemoveOn="0.1" />
+    </Pool>
+    <Pool Name="greedAngel">
+        <Item Name="Kind Soul" Weight="1" DecreaseBy="1" RemoveOn="0.1" />
+    </Pool>
+    <Pool Name="shop">
+        <Item Name="Sunset Clock" Weight="1" DecreaseBy="1" RemoveOn="0.1" />
+    </Pool>
+    <Pool Name="greedShop">
+        <Item Name="Sunset Clock" Weight="1" DecreaseBy="1" RemoveOn="0.1" />
+    </Pool>
+    <Pool Name="secret">
+        <Item Name="Sunset Clock" Weight="1" DecreaseBy="1" RemoveOn="0.1" />
+    </Pool>
+    <Pool Name="greedSecret">
+        <Item Name="Sunset Clock" Weight="1" DecreaseBy="1" RemoveOn="0.1" />
+    </Pool>
+    <Pool Name="curse">
+        <Item Name="Arrest Warrant" Weight="1" DecreaseBy="0.5" RemoveOn="0.1"/>
+        <Item Name="Neck Gaiter" Weight="1" DecreaseBy="1" RemoveOn="0.1" />
+    </Pool>
+    <Pool Name="greedCurse">
+        <Item Name="Arrest Warrant" Weight="1" DecreaseBy="0.5" RemoveOn="0.1"/>
+        <Item Name="Neck Gaiter" Weight="1" DecreaseBy="1" RemoveOn="0.1" />
+    </Pool>
+    <Pool Name="goldenChest">
+        <Item Name="Birthday Cake" Weight="1" DecreaseBy="1" RemoveOn="0.1" />
+        <Item Name="Box of Leftovers" Weight="1" DecreaseBy="1" RemoveOn="0.1" />
+    </Pool>
+    <Pool Name="redChest">
+        <Item Name="Neck Gaiter" Weight="1" DecreaseBy="1" RemoveOn="0.1" />
+    </Pool>
+    <Pool Name="beggar">
+        <Item Name="Birthday Cake" Weight="1" DecreaseBy="0.5" RemoveOn="0.1"/>
+    </Pool>
+    <Pool Name="demonBeggar">
+        <Item Name="Neck Gaiter" Weight="1" DecreaseBy="0.5" RemoveOn="0.1"/>
+    </Pool>
+    <Pool Name="oldChest">
+        <Item Name="Kind Soul" Weight="1" DecreaseBy="0.5" RemoveOn="0.1"/>
+        <Item Name="Arrest Warrant" Weight="1" DecreaseBy="0.5" RemoveOn="0.1"/>
+    </Pool>
+</ItemPools>

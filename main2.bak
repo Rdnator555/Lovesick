@@ -1,0 +1,285 @@
+local LOVESICK = RegisterMod("Lovesick",1)
+-- MAKE SURE TO REPLACE ALL INSTANCES OF "LOVESICK" WITH YOUR ACTUAL MOD REFERENCE
+-- Made by Slugcat. Report any issues to her.
+
+local json = require("json")
+local dataCache = {}
+local dataCacheBackup = {}
+local shouldRestoreOnUse = false
+local loadedData = false
+local inRunButNotLoaded = true
+
+local skipNextRoomClear = false
+local skipNextLevelClear = false
+
+---@class SaveData
+---@field run RunSave @Data that is reset when the run ends. Using glowing hourglass restores data to the last backup.
+---@field hourglassBackup table @The data that is restored when using glowing hourglass. Don't touch this.
+---@field file FileSave @Data that is persistent between runs.
+
+---@class RunSave
+---@field persistent table @Things in this table will not be reset until the run ends.
+---@field level table @Things in this table will not be reset until the level is changed.
+---@field room table @Things in this table will not be reset until the room is changed.
+
+---@class FileSave
+---@field achievements table @Achievement related data.
+---@field dss table @Dead Sea Scrolls related data.
+---@field settings table @Setting related data.
+---@field misc table @Miscellaneous stuff, you likely won't need to use this.
+
+-- If you want to store default data, you must put it in this table.
+---@return SaveData
+function LOVESICK.DefaultSave()
+    return {
+        ---@type RunSave
+        run = {
+            persistent = {},
+            level = {},
+            room = {},
+        },
+        ---@type RunSave
+        hourglassBackup = {
+            persistent = {},
+            level = {},
+            room = {},
+        },
+        ---@type FileSave
+        file = {
+            achievements = {},
+            dss = {}, -- Dead Sea Scrolls supremacy
+            settings = {},
+            misc = {},
+        },
+    }
+end
+
+---@return RunSave
+function LOVESICK.DefaultRunSave()
+    return {
+        persistent = {},
+        level = {},
+        room = {},
+    }
+end
+
+function LOVESICK.DeepCopy(tab)
+    local copy = {}
+    for k, v in pairs(tab) do
+        if type(v) == 'table' then
+            copy[k] = LOVESICK.DeepCopy(v)
+        else
+            copy[k] = v
+        end
+    end
+    return copy
+end
+
+---@return boolean
+function LOVESICK.IsDataLoaded()
+    return loadedData
+end
+
+function LOVESICK.PatchSaveTable(deposit, source)
+    source = source or LOVESICK.DefaultSave()
+
+    for i, v in pairs(source) do
+        if deposit[i] ~= nil then
+            if type(v) == "table" then
+                if type(deposit[i]) ~= "table" then
+                    deposit[i] = {}
+                end
+
+                deposit[i] = LOVESICK.PatchSaveTable(deposit[i], v)
+            else
+                deposit[i] = v
+            end
+        else
+            if type(v) == "table" then
+                if type(deposit[i]) ~= "table" then
+                    deposit[i] = {}
+                end
+
+                deposit[i] = LOVESICK.PatchSaveTable({}, v)
+            else
+                deposit[i] = v
+            end
+        end
+    end
+
+    return deposit
+end
+
+function LOVESICK.SaveModData()
+    if not loadedData then
+        return
+    end
+    print("save mod data")
+
+    -- Save backup
+    local backupData = LOVESICK.DeepCopy(dataCacheBackup)
+    dataCache.hourglassBackup = LOVESICK.PatchSaveTable(backupData, LOVESICK.DefaultRunSave())
+
+    local finalData = LOVESICK.DeepCopy(dataCache)
+    finalData = LOVESICK.PatchSaveTable(finalData, LOVESICK.DefaultSave())
+
+    LOVESICK:SaveData(json.encode(finalData))
+end
+
+function LOVESICK.RestoreModData()
+    if shouldRestoreOnUse then
+        skipNextRoomClear = true
+        local newData = LOVESICK.DeepCopy(dataCacheBackup)
+        dataCache.run = LOVESICK.PatchSaveTable(newData, LOVESICK.DefaultRunSave())
+        dataCache.hourglassBackup = LOVESICK.PatchSaveTable(newData, LOVESICK.DefaultRunSave())
+    end
+end
+
+function LOVESICK.LoadModData()
+    if loadedData then
+        return
+    end
+    print("load mod data")
+
+    local saveData = LOVESICK.DefaultSave()
+
+    if LOVESICK:HasData() then
+        local data = json.decode(LOVESICK:LoadData())
+        saveData = LOVESICK.PatchSaveTable(data, LOVESICK.DefaultSave())
+    end
+
+    dataCache = saveData
+    dataCacheBackup = dataCache.hourglassBackup
+    loadedData = true
+    inRunButNotLoaded = false
+end
+
+---@return table?
+function LOVESICK.GetRunPersistentSave()
+    if not loadedData then
+        return
+    end
+
+    return dataCache.run.persistent
+end
+
+---@return table?
+function LOVESICK.GetLevelSave()
+    if not loadedData then
+        return
+    end
+
+    return dataCache.run.level
+end
+
+---@return table?
+function LOVESICK.GetRoomSave()
+    if not loadedData then
+        return
+    end
+
+    return dataCache.run.room
+end
+
+---@return table?
+function LOVESICK.GetFileSave()
+    if not loadedData then
+        return
+    end
+
+    return dataCache.file
+end
+
+local function ResetRunSave()
+    dataCache.run = LOVESICK.DefaultRunSave()
+    dataCache.hourglassBackup = LOVESICK.DefaultRunSave()
+    dataCacheBackup = LOVESICK.DefaultRunSave()
+
+    LOVESICK.SaveModData()
+end
+
+LOVESICK:AddCallback(ModCallbacks.MC_USE_ITEM, LOVESICK.RestoreModData, CollectibleType.COLLECTIBLE_GLOWING_HOUR_GLASS)
+
+LOVESICK:AddCallback(ModCallbacks.MC_POST_PLAYER_INIT, function()
+    local newGame = Game():GetFrameCount() == 0
+
+    skipNextLevelClear = true
+    skipNextRoomClear = true
+
+    LOVESICK.LoadModData()
+
+    if newGame then
+        ResetRunSave()
+        shouldRestoreOnUse = false
+    end
+end)
+
+LOVESICK:AddCallback(ModCallbacks.MC_POST_UPDATE, function ()
+    local game = Game()
+    if game:GetFrameCount() > 0 then
+        if not loadedData and inRunButNotLoaded then
+            LOVESICK.LoadModData()
+            inRunButNotLoaded = false
+            shouldRestoreOnUse = true
+        end
+    end
+end)
+
+--- Replace YOUR_MOD_NAME with the name of your mod, as defined in RegisterMod!
+--- This handles the "luamod" command!
+LOVESICK:AddCallback(ModCallbacks.MC_PRE_MOD_UNLOAD, function(_, mod)
+    if mod == LOVESICK and Isaac.GetPlayer() ~= nil then
+        if loadedData then
+            LOVESICK.SaveModData()
+        end
+    end
+end)
+
+LOVESICK:AddCallback(ModCallbacks.MC_POST_NEW_ROOM, function()
+    if not skipNextRoomClear then
+        dataCacheBackup.persistent = LOVESICK.DeepCopy(dataCache.run.persistent)
+        dataCacheBackup.room = LOVESICK.DeepCopy(dataCache.run.room)
+        dataCache.run.room = LOVESICK.DeepCopy(LOVESICK.DefaultRunSave().room)
+        LOVESICK.SaveModData()
+        shouldRestoreOnUse = true
+    end
+
+    skipNextRoomClear = false
+end)
+
+LOVESICK:AddCallback(ModCallbacks.MC_POST_NEW_LEVEL, function()
+    if not skipNextLevelClear then
+        dataCacheBackup.persistent = LOVESICK.DeepCopy(dataCache.run.persistent)
+        dataCacheBackup.level = LOVESICK.DeepCopy(dataCache.run.level)
+        dataCache.run.level = LOVESICK.DeepCopy(LOVESICK.DefaultRunSave().level)
+        LOVESICK.SaveModData()
+        shouldRestoreOnUse = true
+    end
+
+    skipNextLevelClear = false
+end)
+
+LOVESICK:AddCallback(ModCallbacks.MC_PRE_GAME_EXIT, function(_, shouldSave)
+    LOVESICK.SaveModData()
+    loadedData = false
+    inRunButNotLoaded = false
+    shouldRestoreOnUse = false
+end)
+
+function LOVESICK:AfterTear()
+    --HeartBeat()
+    --print(FPS)
+    for p=0, game:GetNumPlayers()-1 do
+        local player= Isaac.GetPlayer(p)
+        if player:GetPlayerType() == Isaac.GetPlayerTypeByName("Rick") then
+            --print(RickValues.LockShield[p], RickValues.CalmDelay[p], RickValues.ShowPulseTime[p])
+            --print(math.floor(RickValues.Stress[getPlayerId(player)]-RickValues.StressMax[getPlayerId(player)]/2)/20)
+        end
+    end
+end
+LOVESICK:AddCallback(ModCallbacks.MC_POST_FIRE_TEAR, LOVESICK.AfterTear)
+
+function LOVESICK:LoadDefaultData(NewRun)
+
+    
+end
