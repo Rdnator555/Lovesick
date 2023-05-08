@@ -2674,12 +2674,12 @@ end
 
 
 
-local eid = require("Lovesick_src.mod_compat.eid")
-eid.register()
+local eid = require("Lovesick_src.mod_compat.eid")  --define and import eid file
+eid.register()      --Execute EID command
 
-local modConfigMenu = require("Lovesick_src.mod_compat.modconfigmenu")
-LOVESICK.LoadModData()
-modConfigMenu:AddModConfigOptions(dataCache.file.settings,HasFixes)
+local modConfigMenu = require("Lovesick_src.mod_compat.modconfigmenu")  --define and import ModCongifMenu file
+LOVESICK.LoadModData()      --Preload data to load settings into modConfigMenu
+modConfigMenu:AddModConfigOptions(dataCache.file.settings,HasFixes)     --Execute ModConfigMenu Function with the table of settings, and if it has Standalone Rick_Fixes
 
 print("Lovesick Loaded, Vers.".. Version)
 
