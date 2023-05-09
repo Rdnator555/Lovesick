@@ -276,6 +276,8 @@ end)
 
 local game = Game()
 local sfxManager = SFXManager()
+local level = Game():GetLevel()
+local stage = level:GetStage()
 local curTime = 0
 local Secs
 local oldSecs
@@ -297,7 +299,12 @@ local HasSunsetClock = false
 local newRoomDelay = 0
 local monitor = {} --heartbeatsprite
 local shield = {} --shieldsprite
-local beat = {} --shieldsprite
+local beat = {} --beatsprite
+local note1 = {} --note1
+local note2 = {} --note2
+local note3 = {} --note3
+local note4 = {} --note4
+local tune = {} --Save Notes Here
 local settings = {}
 local achievements = {}
 local runSave = {}
@@ -315,6 +322,17 @@ local Rick =
     Damage = -2.2,
     Luck = 0.7,
     Firedelay = 1,
+
+
+}
+local RickB =
+{
+    Range = -40,
+    ShotSpeed = -1.2,
+    Speed = -0.1,
+    Damage = 1.2,
+    Luck = -1,
+    Firedelay = 3,
 
 
 }
@@ -354,48 +372,11 @@ local RickValues =
     Tired = {},
 }
 
-if not StageAPI then
-    print("Need StageAPI to work!")
-    StageAPI.AddCallback("LOVESICK", "POST_ROOM_LOAD", 2, function(newRoom)
-        if StageAPI.CustomStage("Limbo"):IsStage() then
-            print("IsLimbo")
-        end
-    end)
-else
-StageAPI.AddPlayerGraphicsInfo(rickId, {
-    Portrait = "gfx/ui/stage/playerportrait_rick.png",
-    Name = "gfx/ui/boss/playername_rick.png",
-    PortraitBig = "gfx/ui/stage/playerportrait_rick.png",
-    NoShake = false
-})
-StageAPI.AddBossData("Dummy",{
-    Name = "Dummy",
-    Portrait = "gfx/ui/boss/playerportrait_rick_b.png"  ,
-    BossName = "gfx/ui/boss/playername_seven_b.png" ,
-    Rooms = StageAPI.RoomsList("PunchBag_1", require("resources.luarooms.reaction"))  ,
-})
-local LimboBG = StageAPI.BackdropHelper({
-    Walls = {"1", "2", "3"}, -- you can add more, or remove some
-    NFloors = {"nfloor"},
-    LFloors = {"lfloor"},
-    Corners = {"corner"}
-}, "gfx/floors/Limbo/Limbo", ".png") -- the first one path to the graphics, as well as the beginning of the filename.
-local LimboGrid = StageAPI.GridGfx()
---Music.factorySong = Isaac.GetMusicIdByName("floorsecret")
-LimboGrid:SetRocks("gfx/grid/rocks_basement.png")
-local LimboGFX = StageAPI.RoomGfx(LimboBG, LimboGrid, "_default", "stageapi/shading/shading")
-local LimboFloor = StageAPI.CustomStage("Limbo") -- finally defining the floor.
-LimboFloor:SetRoomGfx(LimboGFX, {RoomType.ROOM_DEFAULT, RoomType.ROOM_TREASURE, RoomType.ROOM_MINIBOSS, RoomType.ROOM_BOSS}) 
---LimboFloor:SetStageMusic(Music.MUSIC_CATHEDRAL, {RoomType.ROOM_DEFAULT, RoomType.ROOM_TREASURE, RoomType.ROOM_MINIBOSS, RoomType.ROOM_BOSS}) 
-LimboFloor:SetBossMusic(Music.MUSIC_CATHEDRAL, Music.MUSIC_BOSS_OVER)
-LimboFloor:SetReplace(StageAPI.StageOverride.NecropolisTwo) -- the annoying part. we'll get to that later.
-LimboFloor:SetSpots("gfx/floors/Limbo/bossspot_Limbo.png", "gfx/floors/Limbo/playerspot_Limbo.png")
---LimboFloor:SetStageNumber(2,1)
-LimboFloor:SetRooms(StageAPI.RoomsList("Limbo_rooms", include("resources.luarooms.limbo"))) -- we'll get to this later!
---LimboFloor:SetBosses({"Dummy"}) -- we'll get to this later!
-print(StageAPI,"StageAPI LODED?")
+local SevenValues = {
+    delay = {}
+}
 
-end
+
 
 
 if RDFIXES ~= nil then
@@ -565,8 +546,8 @@ end
 
 function HeartbeatSpritePreload()
     for p=0, game:GetNumPlayers()-1 do
-        --print(p)
-        if monitor[p]== nil then
+        local player = Isaac.GetPlayer(p)
+        if monitor[p]== nil and player:GetPlayerType() == rickId then
             monitor[p] = Sprite()
             monitor[p]:Load("gfx/others/heartbeatsprite.anm2", true)
             monitor[p]:Play("Low Stress", true)
@@ -578,11 +559,37 @@ function HeartbeatSpritePreload()
             shield[p]:Play("1", true)
             --print("loading shield for ",p)
         end
-        if beat[p]== nil then
-            beat[p] = Sprite()
-            beat[p]:Load("gfx/others/rythm_tempo.anm2", true)
-            beat[p]:Play("Easy", true)
-            --print("loading shield for ",p)
+        if player:GetPlayerType() == rickbId then
+            if beat[p]== nil then
+                beat[p] = Sprite()
+                beat[p]:Load("gfx/others/rythm_tempo.anm2", true)
+                beat[p]:Play("Easy", true)
+                --print("loading shield for ",p)
+            end
+            if note1[p]== nil then
+                note1[p] = Sprite()
+                note1[p]:Load("gfx/others/notes.anm2", true)
+                note1[p]:Play("Space", true)
+                --print("loading shield for ",p)
+            end
+            if note2[p]== nil then
+                note2[p] = Sprite()
+                note2[p]:Load("gfx/others/notes.anm2", true)
+                note2[p]:Play("Space", true)
+                --print("loading shield for ",p)
+            end
+            if note3[p]== nil then
+                note3[p] = Sprite()
+                note3[p]:Load("gfx/others/notes.anm2", true)
+                note3[p]:Play("Space", true)
+                --print("loading shield for ",p)
+            end
+            if note4[p]== nil then
+                note4[p] = Sprite()
+                note4[p]:Load("gfx/others/notes.anm2", true)
+                note4[p]:Play("Space", true)
+                --print("loading shield for ",p)
+            end
         end
     end
 end
@@ -718,50 +725,11 @@ local function onCacheLovesick(_,player, cache)
     --print(getPlayerId(player),RickValues.IsAlive[getPlayerId(player)])
     local p = getPlayerId(player)
     LOVESICK:ReloadDataNeeded()
-    if (player:GetPlayerType() == rickId)then
-        if not player:HasCollectible(Isaac.GetItemIdByName("Locked Heart"),true) and not player:IsCoopGhost() then RickSetup(getPlayerId(player)) end
-        if player:IsCoopGhost() == false and RickValues.IsAlive[getPlayerId(player)] == false then
-            --local RickHair = Isaac.GetCostumeIdByPath("gfx/characters/character_rick_hair.anm2")
-            --player:AddNullCostume(RickHair)
-            RickValues.IsAlive[getPlayerId(player)] = false
-        end
-        --print(player:GetPlayerType().." "..player.ControllerIndex.." ".." ",hasParent," "..player.Damage)
-        if (player.Damage and cache & CacheFlag.CACHE_DAMAGE == CacheFlag.CACHE_DAMAGE) then
-            player.Damage = player.Damage + Rick.Damage
-            --print("Damage", player.Damage, getPlayerId(player))
-        end        
-        if (player.MaxFireDelay and cache & CacheFlag.CACHE_FIREDELAY == CacheFlag.CACHE_FIREDELAY) then
-            --print("Tears1", player.MaxFireDelay )
-            if player.MaxFireDelay - Rick.Firedelay <= 5 then player.MaxFireDelay = player.MaxFireDelay
-            else
-                player.MaxFireDelay = player.MaxFireDelay - Rick.Firedelay
-            end
-           --print("Tears2", player.MaxFireDelay )
-        end
-        if cache == CacheFlag.CACHE_SHOTSPEED  then
-            player.ShotSpeed = player.ShotSpeed + Rick.ShotSpeed
-        end
-        if (player.ShotSpeed and cache & CacheFlag.CACHE_SHOTSPEED == CacheFlag.CACHE_SHOTSPEED) then
-            player.ShotSpeed = player.ShotSpeed + Rick.ShotSpeed
-            --print("ShotSpeed")
-        end        
-        if (player.TearRange and cache & CacheFlag.CACHE_RANGE == CacheFlag.CACHE_RANGE) then
-            player.TearRange = player.TearRange + Rick.Range
-            --print("Range")
-        end
-        if (player.MoveSpeed and cache & CacheFlag.CACHE_SPEED == CacheFlag.CACHE_SPEED) then
-            player.MoveSpeed = math.min(2,player.MoveSpeed + Rick.Speed)
-            --print("Speed")
-        end        
-        if (player.Luck and cache & CacheFlag.CACHE_LUCK == CacheFlag.CACHE_LUCK) then
-            player.Luck = player.Luck + Rick.Luck
-            --print("Luck")
-        end
-        if (player.TearFlags and cache & CacheFlag.CACHE_TEARFLAG == CacheFlag.CACHE_TEARFLAG) then
-            if player:HasCollectible(CollectibleType.COLLECTIBLE_BIRTHRIGHT,true) then 
-                player.TearFlags = player.TearFlags --| TearFlags.TEAR_HP_DROP
-            end
-        end
+    if (player:GetPlayerType() == rickId) then
+        SetbaseStats(player,cache,Rick)
+    end
+    if (player:GetPlayerType() == rickbId)then
+        SetbaseStats(player,cache,RickB)
     end
     if player:HasCollectible(Isaac.GetItemIdByName("Painting Kit")) then
         local Secs= math.floor(curTime/30)
@@ -889,6 +857,41 @@ local function onCacheLovesick(_,player, cache)
     end
 end
 LOVESICK:AddCallback(ModCallbacks.MC_EVALUATE_CACHE, onCacheLovesick)
+
+function SetbaseStats(player,cache,stats)
+    --print(player:GetPlayerType().." "..player.ControllerIndex.." ".." ",hasParent," "..player.Damage)
+    if (player.Damage and cache & CacheFlag.CACHE_DAMAGE == CacheFlag.CACHE_DAMAGE) then
+        player.Damage = player.Damage + stats.Damage
+        --print("Damage", player.Damage, getPlayerId(player))
+    end        
+    if (player.MaxFireDelay and cache & CacheFlag.CACHE_FIREDELAY == CacheFlag.CACHE_FIREDELAY) then
+        --print("Tears1", player.MaxFireDelay )
+        if player.MaxFireDelay - stats.Firedelay <= 5 then player.MaxFireDelay = player.MaxFireDelay
+        else
+            player.MaxFireDelay = player.MaxFireDelay - stats.Firedelay
+        end
+       --print("Tears2", player.MaxFireDelay )
+    end
+    if cache == CacheFlag.CACHE_SHOTSPEED  then
+        player.ShotSpeed = player.ShotSpeed + stats.ShotSpeed
+    end
+    if (player.ShotSpeed and cache & CacheFlag.CACHE_SHOTSPEED == CacheFlag.CACHE_SHOTSPEED) then
+        player.ShotSpeed = player.ShotSpeed + stats.ShotSpeed
+        --print("ShotSpeed")
+    end        
+    if (player.TearRange and cache & CacheFlag.CACHE_RANGE == CacheFlag.CACHE_RANGE) then
+        player.TearRange = player.TearRange + stats.Range
+        --print("Range")
+    end
+    if (player.MoveSpeed and cache & CacheFlag.CACHE_SPEED == CacheFlag.CACHE_SPEED) then
+        player.MoveSpeed = math.min(2,player.MoveSpeed + stats.Speed)
+        --print("Speed")
+    end        
+    if (player.Luck and cache & CacheFlag.CACHE_LUCK == CacheFlag.CACHE_LUCK) then
+        player.Luck = player.Luck + stats.Luck
+        --print("Luck")
+    end
+end
 
 local function onPlayerRender(_, player) 
     --LOVESICK:IsItemUnlocked()   
@@ -1184,7 +1187,10 @@ function LOVESICK:EntityHit(Entity, Amount, DamageFlags, Source, CountdownFrames
             local pierceDMG = (math.floor(10+((RickValues.Stress[p]-RickValues.StressMax[p]/2)/6)))/10
             local stressDMG = math.max(0,(math.floor((RickValues.Stress[p])/6)/500) * (Entity.MaxHitPoints - Entity.HitPoints))
                    
-            if Entity:IsVulnerableEnemy() and player:GetPlayerType() == rickId then
+            if Entity:IsVulnerableEnemy() and player:GetPlayerType() == rickId and not (DamageFlags & DamageFlag.DAMAGE_NOKILL ~= 0)
+            then
+                local defaultDMG
+                if stage >= 7 and achievements.Faith.BlueBaby then defaultDMG = 2 else defaultDMG = 1 end
                 --print(maxShieldNumber)
                 --print(pierceDMG, stressDMG)
                 if Source.Type == 2 then
@@ -1192,50 +1198,39 @@ function LOVESICK:EntityHit(Entity, Amount, DamageFlags, Source, CountdownFrames
                     --print(p,RickValues.Stress[p],RickValues.StressMax[p],player.Luck, player:GetPlayerType())
 
                     --print("pierce")
-                    if player:HasCollectible(CollectibleType.COLLECTIBLE_BIRTHRIGHT,true) then 
+                    if player:HasCollectible(CollectibleType.COLLECTIBLE_BIRTHRIGHT,true) and (maxShieldNumber == -1 or RickValues.LockShield[p]<=defaultDMG*15) then 
                         Entity:TakeDamage((Amount * pierceDMG) + stressDMG, DamageFlag.DAMAGE_IGNORE_ARMOR, EntityRef(Entity), 0)
-                        if Entity.HitPoints <= ((Amount * pierceDMG) + stressDMG) and maxShieldNumber == -1 then
-                            Isaac.Spawn(EntityType.ENTITY_PICKUP, 10, 0, Vector(Entity.Position.X,Entity.Position.Y), Vector(0,0), nil)
-                            local newHeart 
-                            for i, p in pairs (Isaac.FindByType(EntityType.ENTITY_PICKUP)) do
-                                if p.Position.X == Entity.Position.X and p.Variant == 10 then
-                                    --newHeart = p
-                                    p:ToPickup().Timeout = 60 
-                                end
-                            end
+                        if Entity:HasMortalDamage() then
+                            local heart = Isaac.Spawn(EntityType.ENTITY_PICKUP, 10, 0, Entity.Position, Vector(0,0), nil)
+                            heart:ToPickup().Timeout = 60 
+                            Entity:BloodExplode()
+                            game:BombDamage(Entity.Position, player.Damage, 50, true, player, TearFlags.TEAR_FEAR, DamageFlag.DAMAGE_NOKILL, false)
                             --if newHeart ~= nil then newHeart:ToPickup().Timeout = 25 end
                         end
                     else
                         Entity:TakeDamage((Amount * pierceDMG/2) + stressDMG, DamageFlag.DAMAGE_IGNORE_ARMOR, EntityRef(Entity), 0)
                     end
                 elseif Source.Type == 1 then
-                    if player:HasCollectible(CollectibleType.COLLECTIBLE_BIRTHRIGHT,true) and maxShieldNumber == -1  then 
+                    if player:HasCollectible(CollectibleType.COLLECTIBLE_BIRTHRIGHT,true) and (maxShieldNumber == -1 or RickValues.LockShield[p]<=defaultDMG*15)  then 
                         Entity:TakeDamage((Amount * pierceDMG/2) + stressDMG/2, DamageFlag.DAMAGE_IGNORE_ARMOR, EntityRef(Entity), 0)
-                        if Entity.HitPoints <= ((Amount * pierceDMG) + stressDMG) then
-                            Isaac.Spawn(EntityType.ENTITY_PICKUP, 10, 0, Vector(Entity.Position.X,Entity.Position.Y), Vector(0,0), nil)
-                            for i, p in pairs (Isaac.FindByType(EntityType.ENTITY_PICKUP)) do
-                                if p.Position.X == Entity.Position.X and p.Variant == 10 then
-                                    --newHeart = p
-                                    p:ToPickup().Timeout = 60 
-                                end
-                            end
+                        if Entity:HasMortalDamage() then --.HitPoints <= ((Amount * pierceDMG) + stressDMG)
+                            local heart = Isaac.Spawn(EntityType.ENTITY_PICKUP, 10, 0, Vector(Entity.Position.X,Entity.Position.Y), Vector(0,0), nil)
+                            heart:ToPickup().Timeout = 60 
+                            Entity:BloodExplode()
+                            game:BombDamage(Entity.Position, player.Damage, 50, true, player, TearFlags.TEAR_FEAR, DamageFlag.DAMAGE_NOKILL, false)
                             --if newHeart ~= nil then newHeart:ToPickup().Timeout = 25 end
                         end
                     else
                         Entity:TakeDamage((Amount * pierceDMG/4) + stressDMG/4, DamageFlag.DAMAGE_IGNORE_ARMOR, EntityRef(Entity), 0)    
                     end
                 else
-                    if player:HasCollectible(CollectibleType.COLLECTIBLE_BIRTHRIGHT,true) and maxShieldNumber == -1  then 
+                    if player:HasCollectible(CollectibleType.COLLECTIBLE_BIRTHRIGHT,true) and (maxShieldNumber == -1 or RickValues.LockShield[p]<=defaultDMG*15)  then 
                         Entity:TakeDamage((Amount * pierceDMG/3) + stressDMG/3, DamageFlag.DAMAGE_IGNORE_ARMOR, EntityRef(Entity), 0)
-                        if Entity.HitPoints <= ((Amount * pierceDMG) + stressDMG) and maxShieldNumber then
-                            Isaac.Spawn(EntityType.ENTITY_PICKUP, 10, 0, Vector(Entity.Position.X,Entity.Position.Y), Vector(0,0), nil)
-                            local newHeart 
-                            for i, p in pairs (Isaac.FindByType(EntityType.ENTITY_PICKUP)) do
-                                if p.Position.X == Entity.Position.X and p.Position.Y == Entity.Position.Y and p.Variant == 10 then
-                                    --newHeart = p
-                                    p:ToPickup().Timeout = 60 
-                                end
-                            end
+                        if Entity:HasMortalDamage() then
+                            local heart = Isaac.Spawn(EntityType.ENTITY_PICKUP, 10, 0, Vector(Entity.Position.X,Entity.Position.Y), Vector(0,0), nil)
+                            heart:ToPickup().Timeout = 60 
+                            Entity:BloodExplode()
+                            game:BombDamage(Entity.Position, player.Damage, 50, true, player, TearFlags.TEAR_FEAR, DamageFlag.DAMAGE_NOKILL, false)
                             --if newHeart ~= nil then newHeart:ToPickup().Timeout = 25 end
                         end
                     else
@@ -1351,7 +1346,7 @@ function LOVESICK:preHeartCollision(Pickup, Entity, Low)
         local player = Entity:ToPlayer()
         local number = getPlayerId(player)
         --print("colliding",(player:GetSoulHearts()+ player:GetEffectiveMaxHearts())>=(24-(player:GetBrokenHearts()*2)))
-        if player:GetPlayerType() == rickId and RickValues.LockShield[number] > 0 then
+        if player:GetPlayerType() == rickId  then   --and RickValues.LockShield[number] > 0
             local charge=player:GetActiveCharge(ActiveSlot.SLOT_POCKET)
             local subcharge = player:GetBatteryCharge(ActiveSlot.SLOT_POCKET)
             if Pickup.Variant == PickupVariant.PICKUP_HEART then
@@ -1841,6 +1836,7 @@ end
 
 
 function LOVESICK:Stress()
+    --LOVESICK:Barehanded()
     LOVESICK:ReloadDataNeeded()
     --print(runSave.MegasatanIsDead)
     if true then --runSave.persistent.MegasatanIsDead == true
@@ -1959,8 +1955,6 @@ function LOVESICK:LockedHeartUse(_,RNG,EntityPlayer,UseFlags)
     ShieldSpriteSelect(p)
     local oldShield = RickValues.LockShield[p]
     local defaultDMG
-    local level = Game():GetLevel()
-    local stage = level:GetStage()
     LOVESICK.LoadModData() 
     achievements = dataCache.file.achievements 
     --print(achievements.Faith)
@@ -2209,8 +2203,10 @@ function Timer()
         
         end
         if _120BPM ~= old120BPM  then
-            if number == game:GetNumPlayers()-1 then 
-                --old120BPM = _120BPM
+            if number == game:GetNumPlayers()-1 then
+                if number == game:GetNumPlayers()-1 then 
+                    old120BPM = _120BPM
+                end
             end
         end    
         if _130BPM ~= old130BPM  then
@@ -2224,17 +2220,16 @@ function Timer()
             end
         end   
         if _190BPM ~= old190BPM  then
-            if beat[number]:GetFrame() == 6 then
-                --sfxManager:Play(Isaac.GetSoundIdByName("Beat_1"), 1,  8, false, 1.1)
-            end
-            if beat[number]:IsFinished("Easy") then
-                --beat[number]:Play("Easy",true)
-            end
-            beat[number]:Update()
-            if number == game:GetNumPlayers()-1 then 
-                --old120BPM = _120BPM
-                
-            end
+            --if beat[number]:GetFrame() == 6 then
+            --    sfxManager:Play(Isaac.GetSoundIdByName("Beat_1"), 1,  8, false, 1.1)
+            --end
+            --if beat[number]:IsFinished("Easy") then
+            --    beat[number]:Play("Easy",true)
+            --end
+            --beat[number]:Update()
+            --if number == game:GetNumPlayers()-1 then 
+            --    old190BPM = _190BPM
+            --end
         end   
     end
 end
@@ -2396,7 +2391,6 @@ end
 
 function LOVESICK:OnNewStage()
     LOVESICK:ReloadDataNeeded()
-    print("stage")
     for p = 0, game:GetNumPlayers() - 1 do
         local player = Isaac.GetPlayer(p)
         if player:HasCollectible(Isaac.GetItemIdByName("Box of Leftovers"),false) then
@@ -2593,6 +2587,9 @@ function LOVESICK:Kind_Soul(entity)
         if not Input.IsActionPressed(ButtonAction.ACTION_DROP, entity.Player.ControllerIndex)  then
             if entity.IsFollower then
                 entity:FollowParent()
+                if entity.Velocity:Length() > entity.Player.MoveSpeed*10 then 
+                    entity.Velocity = entity.Velocity:Normalized()*entity.Player.MoveSpeed*10
+                end
             else
                 entity:FollowParent()
                 entity:AddToFollowers()
@@ -2663,10 +2660,11 @@ end
 LOVESICK:AddCallback(ModCallbacks.MC_USE_ITEM, LOVESICK.SleepingPillsUse, Isaac.GetItemIdByName("Sleeping Pills"))
 
 function LOVESICK:RenderBeat(player,renderPos)
-    --local p =  getPlayerId(player)
+    local p =  getPlayerId(player)
     --LOVESICK:ReloadDataNeeded()
     --print("bfs")
-    --beat[p]:Render(Vector(renderPos.X,renderPos.Y), Vector(0,0), Vector(0,0))
+    beat[p]:Render(Vector(renderPos.X,renderPos.Y), Vector(0,0), Vector(0,0))
+    note1[p]:Render(Vector(renderPos.X,renderPos.Y-35), Vector(0,0), Vector(0,0))
 end
 
 function LOVESICK:RestoreHairOnDice(_,RNG,EntityPlayer,UseFlags)
@@ -2709,12 +2707,6 @@ modConfigMenu:AddModConfigOptions(dataCache.file.settings,HasFixes)     --Execut
 
 print("Lovesick Loaded, V.".. Version)
 
-
-
-
-
-
-
 function LOVESICK:AfterTear()
     --HeartBeat()
     --print(FPS)
@@ -2727,9 +2719,13 @@ function LOVESICK:AfterTear()
                     ActiveEnemies = ActiveEnemies + 1
                 end
             end
+            if player:GetPlayerType() == rickId and SevenValues.delay[p] == (nil or 0) then
+                SevenValues.delay[p] = player.MaxFireDelay*10
+            end
+                        
             --print("tear")
             --StageAPI.SpawnCustomTrapdoor(game:GetRoom():GetCenterPos(),StageAPI.CustomStage("Glacier"), "gfx/grid/limbo_trapdoor.anm2", 24, false)
-            StageAPI.GotoCustomStage(StageAPI.CustomStage("Limbo"), false)
+            --StageAPI.GotoCustomStage(StageAPI.CustomStage("Limbo"), false)
             --local portal =StageAPI.SpawnCustomTrapdoor(game:GetRoom():GetCenterPos(),StageAPI.CustomStage("Limbo"), "gfx/grid/limbotrapdoor.anm2", 1, false)
             --portal:GetSprite():Play("Opened",true)     
 
@@ -2739,4 +2735,37 @@ function LOVESICK:AfterTear()
 end
 LOVESICK:AddCallback(ModCallbacks.MC_POST_FIRE_TEAR, LOVESICK.AfterTear)
 
+
+function LOVESICK:Barehanded()
+    for p=0, game:GetNumPlayers()-1 do
+        local player= Isaac.GetPlayer(p)
+        if player:GetPlayerType() == rickbId then
+            
+            --print(math.floor(player.Velocity:Length()))
+            if SevenValues.delay[p] == nil  then    SevenValues.delay[p] = 0    end
+            local IsShooting = (0~=(player:GetShootingInput().X and player:GetShootingJoystick().X) or 0~=(player:GetShootingInput().Y and player:GetShootingJoystick().Y))
+            if SevenValues.delay[p] <= 0 and IsShooting and not game:IsPaused() then
+                player.CollisionDamage = player.Damage
+                local closerAngle = player:GetShootingJoystick():GetAngleDegrees()
+                local dist = player.TearRange
+                for _, ent in pairs(Isaac.GetRoomEntities()) do
+                    --print(ent.Type,ent.Variant,ent.SubType)
+                    if player.Position:Distance(ent.Position) < dist and ent:IsActiveEnemy(false) then
+                        closerAngle = (ent.Position-player.Position):GetAngleDegrees()
+                        dist = player.Position:Distance(ent.Position)
+                    end
+                end                
+                --if not closerEnt==nil then closerAngle = (player.Position-closerEnt.Position):GetAngleDegrees() else closerAngle = player:GetShootingJoystick() end
+                SevenValues.delay[p] = math.abs(player.MaxFireDelay)*10
+                player:SetMinDamageCooldown(math.floor(player.MaxFireDelay*5)) 
+                player.Velocity = player.Velocity + Vector.FromAngle(closerAngle)*player.MoveSpeed*5
+                sfxManager:Play(SoundEffect.SOUND_PUNCH, 0.5,  8, false, 1)
+                
+
+            elseif not game:IsPaused() then
+                SevenValues.delay[p] = math.max(SevenValues.delay[p]-1,0)
+            end
+        end
+    end
+end
 

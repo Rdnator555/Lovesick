@@ -1,6 +1,8 @@
 <players nameimageroot="gfx/ui/boss/" portraitroot="gfx/ui/stage/" root="gfx/characters/costumes/">
 	<player hp="2" keys="1" name="Rick" nameimage="playername_rick.png" portrait="playerportrait_rick.png" 
 	skin="character_rick.png" skinColor="-1" birthright="Masochism Up" costume="33" costumeSuffix="Rick" />
+	<player hp="4" name="Rick_b" nameimage="playername_rick.png" portrait="playerportrait_rick.png" 
+	skin="character_rick_old.png" skinColor="-1" birthright="Masochism Up" costume="33" costumeSuffix="Rick" bSkinParent="Rick" />
 </players>
 <!--
 	<player hp="2" black="1" bombs="1" name="Rick_b" nameimage="playername_rick.png" portrait="playerportrait_rick.png" skin="character_rick.png" skinColor="-1" bSkinParent="Rick" birthright="This ain't my heart.."/>
