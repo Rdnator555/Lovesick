@@ -607,9 +607,9 @@ function RickSetup(rickplayer)
     --local RickHair = Isaac.GetCostumeIdByPath("gfx/characters/character_rick_hair.anm2")
     --player:AddNullCostume(RickHair)
     RickValues.StressMax.Type = table
-    RickValues.StressMax[rickplayer] = 120
+    RickValues.StressMax[rickplayer] = 240
     RickValues.Stress.Type = table
-    RickValues.Stress[rickplayer] = 60
+    RickValues.Stress[rickplayer] = RickValues.StressMax[rickplayer]/2
     RickValues.ShowPulseTime.Type = table
     RickValues.ShowPulseTime[rickplayer] = 12
     RickValues.CalmDelay.Type = table
@@ -654,9 +654,9 @@ function unNil(p)
     local player = Isaac.GetPlayer(p)
         if player:GetPlayerType() == rickId then
             --print("UnNil:",p,RickValues.IsAlive[p])
-            if RickValues.StressMax[p] == nil then RickValues.StressMax[p] = 120 RickSetup(p) end
+            if RickValues.StressMax[p] == nil then RickValues.StressMax[p] = 240 RickSetup(p) end
             if RickValues.Stress[p] == nil then --print("unNil", p)
-            RickValues.Stress[p] = 60 end
+            RickValues.Stress[p] = RickValues.StressMax[p]/2 end
             if RickValues.ShowPulseTime[p] == nil then --print("unNil", p) 
                 RickValues.ShowPulseTime[p] = 12 end
             if RickValues.CalmDelay[p] == nil then --print("unNil", p) 
@@ -899,8 +899,7 @@ local function onPlayerRender(_, player)
         if player:IsCoopGhost() then RickValues.IsAlive[getPlayerId(player)]=false end
         --print("ID de ",player," es ",getPlayerId(player))
         local p = getPlayerId(player)
-        if player:HasCollectible(CollectibleType.COLLECTIBLE_BIRTHRIGHT,true) then RickValues.StressMax[p] = 240 else RickValues.StressMax[p] = 120 end
-        local playerNum= getPlayerId(player)
+        if player:HasCollectible(CollectibleType.COLLECTIBLE_BIRTHRIGHT,true) then RickValues.StressMax[p] = 360 else RickValues.StressMax[p] = 240 end
         if RickValues.IsRick[p]~= true then
             unNil(getPlayerId(player))
             --print(RickValues.LockShield[getPlayerId(player)])
@@ -1186,9 +1185,17 @@ function LOVESICK:EntityHit(Entity, Amount, DamageFlags, Source, CountdownFrames
         else 
             local pierceDMG = (math.floor(10+((RickValues.Stress[p]-RickValues.StressMax[p]/2)/6)))/10
             local stressDMG = math.max(0,(math.floor((RickValues.Stress[p])/6)/500) * (Entity.MaxHitPoints - Entity.HitPoints))
-                   
-            if Entity:IsVulnerableEnemy() and player:GetPlayerType() == rickId and not (DamageFlags & DamageFlag.DAMAGE_NOKILL ~= 0)
-            then
+            local data = Entity:GetData()
+            if data.Delay == nil then data.Delay = {} end   
+            if data.Delay[p] == nil then data.Delay[p] = 0 end
+            --print(data.Delay[p])
+            if data.Frame == nil then data.Frame = {} end   
+            if data.Frame[p] == nil then data.Frame[p] = game:GetFrameCount() end
+            if data.Delay[p] -(game:GetFrameCount()-data.Frame[p]) <=0  then  
+                print("Pierce")
+                data.Delay[p] = 30 data.Frame[p] = game:GetFrameCount()       
+                if Entity:IsVulnerableEnemy() and player:GetPlayerType() == rickId and not (DamageFlags & DamageFlag.DAMAGE_NOKILL ~= 0) 
+                then
                 local defaultDMG
                 if stage >= 7 and achievements.Faith.BlueBaby then defaultDMG = 2 else defaultDMG = 1 end
                 --print(maxShieldNumber)
@@ -1198,39 +1205,39 @@ function LOVESICK:EntityHit(Entity, Amount, DamageFlags, Source, CountdownFrames
                     --print(p,RickValues.Stress[p],RickValues.StressMax[p],player.Luck, player:GetPlayerType())
 
                     --print("pierce")
-                    if player:HasCollectible(CollectibleType.COLLECTIBLE_BIRTHRIGHT,true) and (maxShieldNumber == -1 or RickValues.LockShield[p]<=defaultDMG*15) then 
+                    if player:HasCollectible(CollectibleType.COLLECTIBLE_BIRTHRIGHT,true) and (maxShieldNumber == -1 or RickValues.LockShield[p]<=defaultDMG*5) then 
                         Entity:TakeDamage((Amount * pierceDMG) + stressDMG, DamageFlag.DAMAGE_IGNORE_ARMOR, EntityRef(Entity), 0)
-                        if Entity:HasMortalDamage() then
+                        if Entity:HasMortalDamage() or Entity.HitPoints <= ((Amount * pierceDMG) + stressDMG) then
                             local heart = Isaac.Spawn(EntityType.ENTITY_PICKUP, 10, 0, Entity.Position, Vector(0,0), nil)
                             heart:ToPickup().Timeout = 60 
                             Entity:BloodExplode()
-                            game:BombDamage(Entity.Position, player.Damage, 50, true, player, TearFlags.TEAR_FEAR, DamageFlag.DAMAGE_NOKILL, false)
+                            game:BombDamage(Entity.Position, player.Damage/2, 20, true, player, player.TearFlags | TearFlags.TEAR_FEAR, DamageFlag.DAMAGE_NOKILL, false)
                             --if newHeart ~= nil then newHeart:ToPickup().Timeout = 25 end
                         end
                     else
-                        Entity:TakeDamage((Amount * pierceDMG/2) + stressDMG, DamageFlag.DAMAGE_IGNORE_ARMOR, EntityRef(Entity), 0)
+                        Entity:TakeDamage((Amount * pierceDMG) + stressDMG, DamageFlag.DAMAGE_IGNORE_ARMOR, EntityRef(Entity), 0)
                     end
                 elseif Source.Type == 1 then
                     if player:HasCollectible(CollectibleType.COLLECTIBLE_BIRTHRIGHT,true) and (maxShieldNumber == -1 or RickValues.LockShield[p]<=defaultDMG*15)  then 
-                        Entity:TakeDamage((Amount * pierceDMG/2) + stressDMG/2, DamageFlag.DAMAGE_IGNORE_ARMOR, EntityRef(Entity), 0)
-                        if Entity:HasMortalDamage() then --.HitPoints <= ((Amount * pierceDMG) + stressDMG)
+                        Entity:TakeDamage((Amount * pierceDMG) + stressDMG, DamageFlag.DAMAGE_IGNORE_ARMOR, EntityRef(Entity), 0)
+                        if Entity:HasMortalDamage() or Entity.HitPoints <= ((Amount * pierceDMG) + stressDMG) then --
                             local heart = Isaac.Spawn(EntityType.ENTITY_PICKUP, 10, 0, Vector(Entity.Position.X,Entity.Position.Y), Vector(0,0), nil)
                             heart:ToPickup().Timeout = 60 
                             Entity:BloodExplode()
-                            game:BombDamage(Entity.Position, player.Damage, 50, true, player, TearFlags.TEAR_FEAR, DamageFlag.DAMAGE_NOKILL, false)
+                            game:BombDamage(Entity.Position, player.Damage/2, 20, true, player, player.TearFlags | TearFlags.TEAR_FEAR, DamageFlag.DAMAGE_NOKILL, false)
                             --if newHeart ~= nil then newHeart:ToPickup().Timeout = 25 end
                         end
                     else
-                        Entity:TakeDamage((Amount * pierceDMG/4) + stressDMG/4, DamageFlag.DAMAGE_IGNORE_ARMOR, EntityRef(Entity), 0)    
+                        Entity:TakeDamage((Amount * pierceDMG) + stressDMG, DamageFlag.DAMAGE_IGNORE_ARMOR, EntityRef(Entity), 0)    
                     end
                 else
                     if player:HasCollectible(CollectibleType.COLLECTIBLE_BIRTHRIGHT,true) and (maxShieldNumber == -1 or RickValues.LockShield[p]<=defaultDMG*15)  then 
-                        Entity:TakeDamage((Amount * pierceDMG/3) + stressDMG/3, DamageFlag.DAMAGE_IGNORE_ARMOR, EntityRef(Entity), 0)
-                        if Entity:HasMortalDamage() then
+                        Entity:TakeDamage((Amount * pierceDMG) + stressDMG, DamageFlag.DAMAGE_IGNORE_ARMOR, EntityRef(Entity), 0)
+                        if Entity:HasMortalDamage() or Entity.HitPoints <= ((Amount * pierceDMG) + stressDMG)then
                             local heart = Isaac.Spawn(EntityType.ENTITY_PICKUP, 10, 0, Vector(Entity.Position.X,Entity.Position.Y), Vector(0,0), nil)
                             heart:ToPickup().Timeout = 60 
                             Entity:BloodExplode()
-                            game:BombDamage(Entity.Position, player.Damage, 50, true, player, TearFlags.TEAR_FEAR, DamageFlag.DAMAGE_NOKILL, false)
+                            game:BombDamage(Entity.Position, player.Damage/2, 20, true, player, player.TearFlags | TearFlags.TEAR_FEAR, DamageFlag.DAMAGE_NOKILL, false)
                             --if newHeart ~= nil then newHeart:ToPickup().Timeout = 25 end
                         end
                     else
@@ -1264,8 +1271,11 @@ function LOVESICK:EntityHit(Entity, Amount, DamageFlags, Source, CountdownFrames
                         end
                     end
                 end
+                end
+            else
+                data.Delay[p] = data.Delay[p] -(game:GetFrameCount()-data.Frame[p])
             end
-        
+
         RickValues.CalmDelay[p]= math.max(RickValues.CalmDelay[p],5)
         RickValues.ShowPulseTime[p]= math.max(RickValues.ShowPulseTime[p],3)
         
