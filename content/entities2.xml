@@ -1,5 +1,11 @@
-<entities anm2root="gfx/" version="5">
+<entities anm2root="gfx/" version="13">
     <entity id="3" variant="7001" name="Kind Soul" baseHP="6" shutdoors="false" stageHP="0" boss="0" champion="0" collisionDamage="0" collisionMass="100" collisionRadius="20" friction="1" numGridCollisionPoints="12" shadowSize="15" anm2path="Kind_Soul.anm2" tags="noreroll cansacrifice">
         <gibs amount="8" blood="0" bone="0" eye="0" gut="0" large="0" rock="0" dust="10"/>
     </entity>
+    <entity anm2path="412.000_Delirium.anm2" tags="nodelirium" baseHP="10000" boss="1" bossid="70" shieldStrength="40" champion="0" collisionDamage="1" collisionMass="100" collisionRadius="40" friction="1" id="512" name="Delirium_EX" numGridCollisionPoints="40" shadowSize="0" stageHP="0" variant="90" portrait="2" tags="nodelirium" >
+	<!--bestiary transform="0,0,.4" anim="Idle" 
+    <entity anm2path="412.000_Delirium.anm2" baseHP="600" boss="1" bossID="109" Champion="0" collisionDamage="1" collisionMass="50" collisionRadius="40" friction="1" id="568" name="Cave Angler" numGridCollisionPoints="12" shadowSize="56" stageHP="0" variant="4589" portrait="2" tags="nodelirium">
+    !-->
+		<gibs amount="24" blood="1" bone="0" eye="0" gut="1" large="1" />
+	</entity>
 </entities>

@@ -313,6 +313,11 @@ local idle_timer = 0
 achievement:Load("gfx/ui/achievement/achievements.anm2", true)
 local rickId = Isaac.GetPlayerTypeByName("Rick")
 local rickbId = Isaac.GetPlayerTypeByName("Rick_b",true)
+--FIltered callback for NPCUpdate
+local DELIRIUM_EX_TYPE = Isaac.GetEntityTypeByName("Delirium_EX")
+local DELIRIUM_EX_VARIANT = Isaac.GetEntityVariantByName("Delirium_EX")
+local debugText = "no thing"
+
 local UnlockQueue = {}
 local Rick =
 {
@@ -1079,6 +1084,7 @@ function LOVESICK:EntityHit(Entity, Amount, DamageFlags, Source, CountdownFrames
     local shieldCharges = RickValues.LockShield[maxShieldNumber]
     if shieldCharges == nil then shieldCharges = 0 end 
     if Entity.Type == 1 then
+        
         local player = Entity:ToPlayer()
         --player Stress DMG here
         if runSave.persistent.MorphineTime[getPlayerId(player)] > 0 then
@@ -1159,7 +1165,7 @@ function LOVESICK:EntityHit(Entity, Amount, DamageFlags, Source, CountdownFrames
             if stressDMG >= 0 and Source.Type ~= Entity.Type and Source.SubType ~= Entity.SubType then 
                 if RickValues.Stress[getPlayerId(player)] ~= nil then 
                     player:TakeDamage(math.floor(stressDMG), DamageFlag.DAMAGE_NO_PENALTIES, EntityRef(Entity), 0) 
-                    if RickValues.Stress[getPlayerId(player)] > 0 then
+                    if RickValues.Stress[getPlayerId(player)] > 0 and not (DamageFlags & DamageFlag.DAMAGE_NO_PENALTIES ~= 0 or DamageFlags & DamageFlag.DAMAGE_RED_HEARTS ~= 0) and (player:GetHearts()+player:GetSoulHearts()+player:GetBoneHearts())>Amount and DamageFlags & DamageFlag.DAMAGE_CURSED_DOOR == 0 then
                         --print("help1",RickValues.Stress[getPlayerId(player)]) 
                         RickValues.Stress[getPlayerId(player)] = math.floor(RickValues.Stress[getPlayerId(player)]-math.max(15,RickValues.Stress[getPlayerId(player)]*1/3)) 
                         if RickValues.Stress[getPlayerId(player)] <=0 then RickValues.Stress[getPlayerId(player)] = 0 player:Die() end
@@ -1180,6 +1186,14 @@ function LOVESICK:EntityHit(Entity, Amount, DamageFlags, Source, CountdownFrames
             player=Source.Entity.Parent:ToPlayer()
         end
         --print(player:GetPlayerType())
+        if player == nil then
+        else
+            if player.Type == 1 and Entity.Parent == nil then
+                if runSave.persistent.TotalDamage == nil then runSave.persistent.TotalDamage = math.min(Amount,Entity.HitPoints) else
+                runSave.persistent.TotalDamage = runSave.persistent.TotalDamage + math.min(Amount,Entity.HitPoints) end
+            end
+        end
+        
         local p = getPlayerId(player)
         if RickValues.Stress[p] == nil then
         else 
@@ -1189,10 +1203,10 @@ function LOVESICK:EntityHit(Entity, Amount, DamageFlags, Source, CountdownFrames
             if data.Delay == nil then data.Delay = {} end   
             if data.Delay[p] == nil then data.Delay[p] = 0 end
             --print(data.Delay[p])
-            if data.Frame == nil then data.Frame = {} end   
+            if data.Frame == nil then data.Frame = {} end
             if data.Frame[p] == nil then data.Frame[p] = game:GetFrameCount() end
             if data.Delay[p] -(game:GetFrameCount()-data.Frame[p]) <=0  then  
-                print("Pierce")
+                --print("Pierce")
                 data.Delay[p] = 30 data.Frame[p] = game:GetFrameCount()       
                 if Entity:IsVulnerableEnemy() and player:GetPlayerType() == rickId and not (DamageFlags & DamageFlag.DAMAGE_NOKILL ~= 0) 
                 then
@@ -1211,9 +1225,12 @@ function LOVESICK:EntityHit(Entity, Amount, DamageFlags, Source, CountdownFrames
                             local heart = Isaac.Spawn(EntityType.ENTITY_PICKUP, 10, 0, Entity.Position, Vector(0,0), nil)
                             heart:ToPickup().Timeout = 60 
                             Entity:BloodExplode()
-                            game:BombDamage(Entity.Position, player.Damage/2, 20, true, player, player.TearFlags | TearFlags.TEAR_FEAR, DamageFlag.DAMAGE_NOKILL, false)
+                            game:BombDamage(Entity.Position, player.Damage/2, 45, true, player, player.TearFlags | TearFlags.TEAR_FEAR, DamageFlag.DAMAGE_NOKILL, false)
                             --if newHeart ~= nil then newHeart:ToPickup().Timeout = 25 end
                         end
+                    elseif (Entity:HasMortalDamage() or Entity.HitPoints <= ((Amount * pierceDMG) + stressDMG)) and RickValues.Adrenaline[p] == true then
+                            Entity:BloodExplode()
+                            game:BombDamage(Entity.Position, player.Damage/2, 45, true, player, player.TearFlags | TearFlags.TEAR_FEAR, DamageFlag.DAMAGE_NOKILL, false)
                     else
                         Entity:TakeDamage((Amount * pierceDMG) + stressDMG, DamageFlag.DAMAGE_IGNORE_ARMOR, EntityRef(Entity), 0)
                     end
@@ -1224,9 +1241,12 @@ function LOVESICK:EntityHit(Entity, Amount, DamageFlags, Source, CountdownFrames
                             local heart = Isaac.Spawn(EntityType.ENTITY_PICKUP, 10, 0, Vector(Entity.Position.X,Entity.Position.Y), Vector(0,0), nil)
                             heart:ToPickup().Timeout = 60 
                             Entity:BloodExplode()
-                            game:BombDamage(Entity.Position, player.Damage/2, 20, true, player, player.TearFlags | TearFlags.TEAR_FEAR, DamageFlag.DAMAGE_NOKILL, false)
+                            game:BombDamage(Entity.Position, player.Damage/2, 45, true, player, player.TearFlags | TearFlags.TEAR_FEAR, DamageFlag.DAMAGE_NOKILL, false)
                             --if newHeart ~= nil then newHeart:ToPickup().Timeout = 25 end
                         end
+                    elseif (Entity:HasMortalDamage() or Entity.HitPoints <= ((Amount * pierceDMG) + stressDMG)) and RickValues.Adrenaline[p] == true then
+                        Entity:BloodExplode()
+                        game:BombDamage(Entity.Position, player.Damage/2, 45, true, player, player.TearFlags | TearFlags.TEAR_FEAR, DamageFlag.DAMAGE_NOKILL, false)
                     else
                         Entity:TakeDamage((Amount * pierceDMG) + stressDMG, DamageFlag.DAMAGE_IGNORE_ARMOR, EntityRef(Entity), 0)    
                     end
@@ -1237,9 +1257,12 @@ function LOVESICK:EntityHit(Entity, Amount, DamageFlags, Source, CountdownFrames
                             local heart = Isaac.Spawn(EntityType.ENTITY_PICKUP, 10, 0, Vector(Entity.Position.X,Entity.Position.Y), Vector(0,0), nil)
                             heart:ToPickup().Timeout = 60 
                             Entity:BloodExplode()
-                            game:BombDamage(Entity.Position, player.Damage/2, 20, true, player, player.TearFlags | TearFlags.TEAR_FEAR, DamageFlag.DAMAGE_NOKILL, false)
+                            game:BombDamage(Entity.Position, player.Damage/2, 45, true, player, player.TearFlags | TearFlags.TEAR_FEAR, DamageFlag.DAMAGE_NOKILL, false)
                             --if newHeart ~= nil then newHeart:ToPickup().Timeout = 25 end
                         end
+                    elseif (Entity:HasMortalDamage() or Entity.HitPoints <= ((Amount * pierceDMG) + stressDMG)) and RickValues.Adrenaline[p] == true then
+                        Entity:BloodExplode()
+                        game:BombDamage(Entity.Position, player.Damage/2, 45, true, player, player.TearFlags | TearFlags.TEAR_FEAR, DamageFlag.DAMAGE_NOKILL, false)
                     else
                         Entity:TakeDamage((Amount * pierceDMG/6) + stressDMG/6, DamageFlag.DAMAGE_IGNORE_ARMOR, EntityRef(Entity), 0)    
                     end
@@ -1320,7 +1343,7 @@ end
 
 function  LOVESICK:OnNewRoom()
     if StageAPI.CustomStage("Limbo"):IsStage() then
-        print("Limbo")
+        --print("Limbo")
     end
     for p = 0, game:GetNumPlayers() - 1 do
         local player = Isaac.GetPlayer(p)
@@ -1876,7 +1899,8 @@ function LOVESICK:Stress()
             end
 
             --Isaac.RenderText(tostring(MegasatanFix),renderPos.X,renderPos.Y-28, 0 ,1 ,0 ,0.8)
-            --Isaac.RenderText(tostring(runSave.persistent.MegasatanIsDead),renderPos.X,renderPos.Y-38, 0 ,1 ,0 ,0.8)
+            if runSave.persistent.TotalDamage == nil then runSave.persistent.TotalDamage = 0 end
+            Isaac.RenderText(tostring(math.floor(runSave.persistent.TotalDamage*100)/100),40,80, 0 ,1 ,0 ,0.8)
         LOVESICK:renderAchievement()
         LOVESICK:displayQueue()
         HeartbeatSpritePreload()
@@ -2779,3 +2803,74 @@ function LOVESICK:Barehanded()
     end
 end
 
+
+
+
+
+function LOVESICK:moveLogic(npc)
+
+end
+
+local state = NpcState.De
+
+function LOVESICK:update(Delirium_EX)
+    local RNG = Delirium_EX:GetDropRNG()
+    local attackStyle
+    --print(Delirium_EX.Variant,Delirium_EX.SubType)
+    if Delirium_EX.Variant == DELIRIUM_EX_VARIANT then
+        if Delirium_EX.EntityCollisionClass == 0 then 
+            Delirium_EX.EntityCollisionClass = 2 end
+        local player = Isaac.GetPlayer(0);
+        local sprite = Delirium_EX:GetSprite()
+        if Delirium_EX.State == NpcState.STATE_INIT then
+            sprite:Play("Scream",true) 
+            local MaxHp = math.max((runSave.persistent.TotalDamage / (runSave.persistent.TotalDamage + 100000)) * 100000,100)
+            Delirium_EX.MaxHitPoints = math.max(math.min(math.floor(MaxHp),math.floor(runSave.persistent.TotalDamage)),100)
+            Delirium_EX.HitPoints = Delirium_EX.MaxHitPoints
+            Delirium_EX.State = NpcState.STATE_IDLE           
+        end
+        
+        if Delirium_EX.State == NpcState.STATE_IDLE then -- and Delirium_EX.StateFrame%60 == 0
+            if sprite:IsFinished("Blink") then
+                Delirium_EX.StateFrame = 0
+                attackStyle = RNG:RandomInt(5)
+                Delirium_EX.State = NpcState.STATE_ATTACK
+
+            elseif not sprite:IsPlaying("Blink") then 
+                Delirium_EX.StateFrame = Delirium_EX.StateFrame + 1
+            end
+            if sprite:IsFinished("Scream") or sprite:IsFinished("IdleNoLoop") or sprite:IsFinished("Blink") then
+                if Delirium_EX.StateFrame >= 60 then 
+                    sprite:Play("Blink",true)
+                elseif sprite:IsFinished("IdleNoLoop") or sprite:IsFinished("Blink") then
+                    sprite:Play("IdleNoLoop",true)
+                end
+            end
+        end
+        if Delirium_EX.State == NpcState.STATE_ATTACK then -- and Delirium_EX.StateFrame%60 == 0
+            if sprite:IsFinished("Blink") then
+                Delirium_EX.StateFrame = 0
+                attackStyle = RNG:RandomInt(5)
+                Delirium_EX.State = NpcState.STATE_IDLE
+            elseif not sprite:IsPlaying("Blink") then 
+                Delirium_EX.StateFrame = Delirium_EX.StateFrame + 1
+            end
+            if sprite:IsFinished("Scream") or sprite:IsFinished("IdleNoLoop") or sprite:IsFinished("Blink") then
+                if Delirium_EX.StateFrame >= 20 then 
+                    sprite:Play("Blink",true)
+                elseif sprite:IsFinished("IdleNoLoop") or sprite:IsFinished("Blink") then
+                    sprite:Play("IdleNoLoop",true)
+                end
+            end
+        end
+        debugText = (attackStyle.." DELI HP:"..math.floor(Delirium_EX.HitPoints).."/"..Delirium_EX.MaxHitPoints.." "..Delirium_EX.State)
+    end
+end
+
+function LOVESICK:debug_text()
+    Isaac.RenderText(debugText, 100, 100, 255, 0, 0, 255)
+end
+
+LOVESICK:AddCallback(ModCallbacks.MC_POST_RENDER, LOVESICK.debug_text);
+
+LOVESICK:AddCallback(ModCallbacks.MC_NPC_UPDATE, LOVESICK.update, DELIRIUM_EX_TYPE);
