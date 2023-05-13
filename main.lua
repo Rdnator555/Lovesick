@@ -319,6 +319,7 @@ local DELIRIUM_EX_VARIANT = Isaac.GetEntityVariantByName("Delirium_EX")
 local debugText = "no thing"
 
 local UnlockQueue = {}
+local BossQueue = {}
 local Rick =
 {
     Range = 50,
@@ -512,6 +513,7 @@ end
 function LOVESICK.CheckSettings()
     if dataCache.file.settings.TimeBPM == nil then dataCache.file.settings.TimeBPM = 15 end
     if dataCache.file.settings.HideBPM == nil then dataCache.file.settings.HideBPM = true end
+    if dataCache.file.settings.DeliRework == nil then dataCache.file.settings.DeliRework = false end
     if dataCache.file.settings.ShieldNumberAlways == nil then dataCache.file.settings.ShieldNumberAlways = false end
     if dataCache.file.settings.VoidProbability == nil then dataCache.file.settings.VoidProbability = 50 end
     if dataCache.file.settings.UseWorkaroundMegasatan == nil then dataCache.file.settings.UseWorkaroundMegasatan = false end
@@ -524,6 +526,7 @@ end
 
 function LOVESICK:onExit(_,bool)
     if settings.QueueList == nil and UnlockQueue then settings.QueueList = UnlockQueue end
+    if runSave.persistent.BossQueue == nil and BossQueue then runSave.persistent.BossQueue = BossQueue end
     LOVESICK.SaveSettings()
     if bool == false then
         for p=0, game:GetNumPlayers()-1 do
@@ -1047,7 +1050,10 @@ function LOVESICK:removeFromQueue() --Remove older achievement in queue to displ
     if UnlockQueue[1] == nil then return  else
         local OldFirstValue = UnlockQueue[1]
     for i, v in ipairs(UnlockQueue) do 
-        if UnlockQueue[i+1] == nil and UnlockQueue[i]~= nil then UnlockQueue[i] = UnlockQueue[i+1] return OldFirstValue end
+        if UnlockQueue[i+1] == nil and UnlockQueue[i]~= nil then UnlockQueue[i] = UnlockQueue[i+1] return OldFirstValue 
+        else
+            UnlockQueue[i] = UnlockQueue[i+1]
+        end
     end
     end
 end
@@ -1190,7 +1196,7 @@ function LOVESICK:EntityHit(Entity, Amount, DamageFlags, Source, CountdownFrames
         else
             if player.Type == 1 and Entity.Parent == nil then
                 if runSave.persistent.TotalDamage == nil then runSave.persistent.TotalDamage = math.min(Amount,Entity.HitPoints) else
-                runSave.persistent.TotalDamage = runSave.persistent.TotalDamage + math.min(Amount,Entity.HitPoints) end
+                runSave.persistent.TotalDamage = runSave.persistent.TotalDamage + math.min(Amount,math.max(Entity.HitPoints,0)) end
             end
         end
         
@@ -1899,8 +1905,6 @@ function LOVESICK:Stress()
             end
 
             --Isaac.RenderText(tostring(MegasatanFix),renderPos.X,renderPos.Y-28, 0 ,1 ,0 ,0.8)
-            if runSave.persistent.TotalDamage == nil then runSave.persistent.TotalDamage = 0 end
-            Isaac.RenderText(tostring(math.floor(runSave.persistent.TotalDamage*100)/100),40,80, 0 ,1 ,0 ,0.8)
         LOVESICK:renderAchievement()
         LOVESICK:displayQueue()
         HeartbeatSpritePreload()
@@ -2344,9 +2348,70 @@ local function postNPCDeath(_,npc)
 			end
 		end
 	end
+    if npc:ToNPC():IsBoss() then
+        if dataCache.run.persistent.BossQueue ~= nil then
+            BossQueue = dataCache.run.persistent.BossQueue
+        end
+        local bossData = {npc.Type, npc.SubType, npc.Variant,}
+        local IsCustomDeliFight = false
+        for _, ent in pairs(Isaac.GetRoomEntities()) do
+            if ent.Type == DELIRIUM_EX_TYPE and ent.Variant == DELIRIUM_EX_VARIANT then
+                IsCustomDeliFight = true
+            end
+        end
+        if not IsCustomDeliFight and not(npc.Type == DELIRIUM_EX_TYPE and npc.Variant == DELIRIUM_EX_VARIANT ) and not (npc.Type == EntityType.ENTITY_DELIRIUM) then
+            LOVESICK:storeBossInQueue(bossData)
+        else
+            if not npc.Type == DELIRIUM_EX_TYPE  and not npc.Variant == DELIRIUM_EX_VARIANT and not npc.Parent then
+                for _, ent in pairs(Isaac.GetRoomEntities()) do
+                    if ent.Type == DELIRIUM_EX_TYPE and ent.Variant == DELIRIUM_EX_VARIANT then
+                        local data = ent:GetData()
+                        data.defeatedFoes = data.defeatedFoes + 1
+                    end
+                end
+            end
+        end
+        if dataCache.run.persistent.BossQueue == nil then
+            dataCache.run.persistent.BossQueue = BossQueue
+        end
+        
+        LOVESICK.SaveModData()
+        if npc.Type == DELIRIUM_EX_TYPE and npc.Variant == DELIRIUM_EX_VARIANT then
+            local Deli = Isaac.Spawn(EntityType.ENTITY_DELIRIUM,0,0,npc.Position,Vector.Zero,npc)
+            Deli.Parent = npc
+            npc:Remove()
+            Deli.HitPoints = 1
+            Deli:TakeDamage(999,DamageFlag.DAMAGE_IGNORE_ARMOR,EntityRef(npc),0)
+            --Deli:ToNPC().State = NpcState.STATE_DEATH
+            for _, ent in pairs(Isaac.GetRoomEntities()) do
+                --print(ent.Type,ent.Variant,ent.SubType)
+                if ent:IsBoss() and not ent.Type==EntityType.ENTITY_DELIRIUM then -- position = ent.Position 
+                    ent:Remove()
+                end
+            end 
+        end
+        if npc.Type == EntityType.ENTITY_DELIRIUM then
+            for _, ent in pairs(Isaac.GetRoomEntities()) do
+                --print(ent.Type,ent.Variant,ent.SubType)
+                if ent.Type == EntityType.ENTITY_EFFECT and ent.Variant == EffectVariant.OCCULT_TARGET and ent.SubType == 20 then -- position = ent.Position 
+                    ent:Remove()
+                end
+            end    
+        end
+    end
+    
 end
 
 LOVESICK:AddCallback(ModCallbacks.MC_POST_NPC_DEATH, postNPCDeath)
+
+local function postNPCInit(_,npc)
+    LOVESICK.LoadModData()
+    if dataCache.file.settings.DeliRework == true and npc.SpawnerEntity.Type == nil  then
+        Isaac.Spawn(DELIRIUM_EX_TYPE,DELIRIUM_EX_VARIANT,0,npc.Position,Vector.Zero,npc)
+        npc:Remove()
+    end
+end
+LOVESICK:AddCallback(ModCallbacks.MC_POST_NPC_INIT, postNPCInit, EntityType.ENTITY_DELIRIUM)
 
 local function postEntityKill(_, entity)
 	if game:GetVictoryLap() > 0 then return end
@@ -2756,15 +2821,26 @@ function LOVESICK:AfterTear()
             if player:GetPlayerType() == rickId and SevenValues.delay[p] == (nil or 0) then
                 SevenValues.delay[p] = player.MaxFireDelay*10
             end
-                        
+            for _, ent in pairs(Isaac.GetRoomEntities()) do
+                if ent.Type == EntityType.ENTITY_PROJECTILE then
+                    --print(ent.Color.A,ent.Color.R,ent.Color.G,ent.Color.B)
+                end
+            end            
             --print("tear")
             --StageAPI.SpawnCustomTrapdoor(game:GetRoom():GetCenterPos(),StageAPI.CustomStage("Glacier"), "gfx/grid/limbo_trapdoor.anm2", 24, false)
             --StageAPI.GotoCustomStage(StageAPI.CustomStage("Limbo"), false)
             --local portal =StageAPI.SpawnCustomTrapdoor(game:GetRoom():GetCenterPos(),StageAPI.CustomStage("Limbo"), "gfx/grid/limbotrapdoor.anm2", 1, false)
             --portal:GetSprite():Play("Opened",true)     
-
-            --print(runSave.persistent.MegasatanIsDead)
+            --LOVESICK.LoadModData()
+            --print(LOVESICK:HowLongIs(dataCache.run.persistent.BossQueue))
+            --print(BossQueue[1][1],BossQueue[1][2],BossQueue[1][3])
+            --print(LOVESICK:HowLongIs(dataCache.run.persistent.BossQueue),LOVESICK:HowLongIs(BossQueue))
         --end
+        --DELI SOUND DOWN HERE
+        --sfxManager:Play(SoundEffect.SOUND_DEATH_CARD, 5,  8, false,0.5)
+        LOVESICK.LoadModData()
+        --print(dataCache.file.settings.DeliRework)
+
     end
 end
 LOVESICK:AddCallback(ModCallbacks.MC_POST_FIRE_TEAR, LOVESICK.AfterTear)
@@ -2813,64 +2889,300 @@ end
 
 local state = NpcState.De
 
-function LOVESICK:update(Delirium_EX)
+function LOVESICK:DeliExupdate(Delirium_EX)
+    
     local RNG = Delirium_EX:GetDropRNG()
     local attackStyle
+    local objetive
+    local distanceObjetive = 999
+    Delirium_EX.Velocity = Vector(0,0)
+    --Delirium_EX.Acceleration = Vector(0,0)
+    Delirium_EX.Position = Isaac.GetFreeNearPosition(Delirium_EX.Position, 1)
+    local explodeContinuum = ProjectileParams()
+        explodeContinuum.Spread = 90
+        explodeContinuum.ChangeTimeout = 50
+        explodeContinuum.BulletFlags = ProjectileFlags.EXPLODE | ProjectileFlags.SMART | ProjectileFlags.DECELERATE | ProjectileFlags.CHANGE_FLAGS_AFTER_TIMEOUT | ProjectileFlags.CHANGE_VELOCITY_AFTER_TIMEOUT
+        explodeContinuum.ChangeFlags = ProjectileFlags.CONTINUUM | ProjectileFlags.BURST
+        explodeContinuum.Color = Color(0.8,1,1,1,1,1,1)
+        explodeContinuum.Scale = 3
+        explodeContinuum.ChangeVelocity = 12
+        explodeContinuum.HomingStrength = 1
+        explodeContinuum.FallingSpeedModifier = -40
+    local flowerTears = ProjectileParams()
+        flowerTears.Acceleration = 1.2
+        flowerTears.WiggleFrameOffset = 100
+        flowerTears.BulletFlags = ProjectileFlags.CHANGE_FLAGS_AFTER_TIMEOUT | ProjectileFlags.CURVE_LEFT | ProjectileFlags.NO_WALL_COLLIDE
+        flowerTears.ChangeFlags = ProjectileFlags.CURVE_RIGHT | ProjectileFlags.NO_WALL_COLLIDE
+        flowerTears.ChangeTimeout = 15
+        flowerTears.GridCollision = false
+        flowerTears.Scale = 1.5
+        flowerTears.Color = Color(0.8,1,1,1,1,1,1)
+        flowerTears.HeightModifier = -1
+        flowerTears.FallingSpeedModifier = -5
+    local goofyAssTearRing = ProjectileParams()
+        goofyAssTearRing.BulletFlags = ProjectileFlags.ORBIT_CW
+        goofyAssTearRing.HeightModifier = 2
+        goofyAssTearRing.FallingSpeedModifier = -5
+        goofyAssTearRing.Color = Color(0.8,1,1,1,1,1,1)
+        LOVESICK:LoadModData()
+        local defeatedFoes = LOVESICK:HowLongIs(dataCache.run.persistent.BossQueue)
+        local data = Delirium_EX:GetData()
+        if data.MaxdefeatedFoes == nil then data.MaxdefeatedFoes = defeatedFoes end
+        if data.defeatedFoes == nil then data.defeatedFoes = 0 end
+        local targets = 0
+    for p = 0, game:GetNumPlayers() - 1 do
+        local player = Isaac.GetPlayer(p)
+        local distance = Delirium_EX.Position:Distance(player.Position)
+        
+        if distance < distanceObjetive then
+            distanceObjetive = distance
+            objetive = player
+        end
+    end
     --print(Delirium_EX.Variant,Delirium_EX.SubType)
     if Delirium_EX.Variant == DELIRIUM_EX_VARIANT then
-        if Delirium_EX.EntityCollisionClass == 0 then 
-            Delirium_EX.EntityCollisionClass = 2 end
+        if BossQueue == nil then 
+            LOVESICK:LoadModData()
+            BossQueue = dataCache.run.persistent.BossQueue
+            if BossQueue == nil then Delirium_EX:Die()
+            local Deli = Isaac.Spawn(EntityType.ENTITY_DELIRIUM,0,0,Delirium_EX.Position,Vector.Zero,Delirium_EX)
+            Deli.Parent = Delirium_EX
+            end
+        end
+        if dataCache.run.persistent.BossQueue ~= nil then BossQueue = dataCache.run.persistent.BossQueue end
+        
         local player = Isaac.GetPlayer(0);
         local sprite = Delirium_EX:GetSprite()
+        for _, ent in pairs(Isaac.GetRoomEntities()) do
+            --print(ent.Type,ent.Variant,ent.SubType)
+            if ent:IsBoss() and (ent:IsVulnerableEnemy() or ent.Visible==true or ent:IsActiveEnemy(false)) then
+                if ent.Type == DELIRIUM_EX_TYPE then
+                    --print("IsDeli",targets)
+                else
+                targets = targets +1
+                end
+                if (ent:IsVulnerableEnemy()==false or ent.Visible==false) and ent.MaxHitPoints == ent.HitPoints and ent.FrameCount >=600 then
+                    ent:Remove()
+                end
+            end
+            if ent.Type == EntityType.ENTITY_EFFECT and ent.Variant == EffectVariant.OCCULT_TARGET and ent.SubType == 20 then -- position = ent.Position 
+                ent.Color.A = ent.FrameCount/120
+                --print(ent.FrameCount)
+                if ent.FrameCount >= 120 then
+                    ent:Remove()
+                    local DefeatedFoe = LOVESICK:removeBossInQueue()
+                    local minion = Isaac.Spawn(DefeatedFoe[1],DefeatedFoe[3],DefeatedFoe[2],ent.Position,Vector.Zero,Delirium_EX)
+                    Delirium_EX.HitPoints = Delirium_EX.HitPoints - Delirium_EX.MaxHitPoints* (1/data.MaxdefeatedFoes)
+                    data.defeatedFoes = data.defeatedFoes + 1
+                    minion.MaxHitPoints = minion.MaxHitPoints + Delirium_EX.MaxHitPoints* (1/data.MaxdefeatedFoes)/2
+                    minion.HitPoints = minion.MaxHitPoints
+                    minion:GetSprite():Play("Appear",true)
+                    minion.Parent = Delirium_EX
+                    targets = targets + 1
+                else
+                    targets = targets + 1
+                end
+            end
+        end
+        if targets >= 3 then 
+        else
+            local freeSpace = Isaac.GetFreeNearPosition(Game():GetRoom():GetRandomPosition(20), 80)
+            local mark =  Isaac.Spawn(EntityType.ENTITY_EFFECT,EffectVariant.OCCULT_TARGET,20,freeSpace,Vector(0,0),Delirium_EX)
+            mark.Color = Color(0,1,1,1,0.3,0.3,0)
+            mark.SpriteScale = Vector(2,2)
+        end
+        debugText = debugText.." Targets:"..tostring(targets)
+        --debugText = tostring(math.max((data.MaxdefeatedFoes-math.max(1,data.defeatedFoes))/data.MaxdefeatedFoes,0.9)).." "..tostring(data.defeatedFoes)
         if Delirium_EX.State == NpcState.STATE_INIT then
+            debugText = "Init "
             sprite:Play("Scream",true) 
-            local MaxHp = math.max((runSave.persistent.TotalDamage / (runSave.persistent.TotalDamage + 100000)) * 100000,100)
-            Delirium_EX.MaxHitPoints = math.max(math.min(math.floor(MaxHp),math.floor(runSave.persistent.TotalDamage)),100)
+            sfxManager:Play(SoundEffect.SOUND_DEATH_CARD, 5,  8, false,0.5)
+            local MaxHp = math.max((runSave.persistent.TotalDamage / (runSave.persistent.TotalDamage + 80000)) * 40000,100)
+            Delirium_EX.MaxHitPoints = math.max(math.min(math.floor(MaxHp),math.floor(runSave.persistent.TotalDamage)),1000)
             Delirium_EX.HitPoints = Delirium_EX.MaxHitPoints
             Delirium_EX.State = NpcState.STATE_IDLE           
         end
-        
-        if Delirium_EX.State == NpcState.STATE_IDLE then -- and Delirium_EX.StateFrame%60 == 0
-            if sprite:IsFinished("Blink") then
-                Delirium_EX.StateFrame = 0
-                attackStyle = RNG:RandomInt(5)
-                Delirium_EX.State = NpcState.STATE_ATTACK
-
-            elseif not sprite:IsPlaying("Blink") then 
-                Delirium_EX.StateFrame = Delirium_EX.StateFrame + 1
-            end
+        if Delirium_EX.State == NpcState.STATE_IDLE then
+            debugText = "Idle "..tostring(Delirium_EX.StateFrame).." "
             if sprite:IsFinished("Scream") or sprite:IsFinished("IdleNoLoop") or sprite:IsFinished("Blink") then
                 if Delirium_EX.StateFrame >= 60 then 
                     sprite:Play("Blink",true)
-                elseif sprite:IsFinished("IdleNoLoop") or sprite:IsFinished("Blink") then
+                    if RNG:RandomInt(3) == 0 then
+                        sfxManager:Play(SoundEffect.SOUND_DEATH_CARD, 5,  8, false,0.5)
+                    end
+                    Delirium_EX.StateFrame = 0
+                    attackStyle = RNG:RandomInt(5)
+                    if attackStyle == 0 then
+                        Delirium_EX.State = NpcState.STATE_ATTACK2 
+                    elseif attackStyle == 1 then
+                        Delirium_EX.State = NpcState.STATE_ATTACK2
+                    elseif attackStyle == 2 then
+                        Delirium_EX.State = NpcState.STATE_MOVE
+                    elseif attackStyle == 3 then
+                        Delirium_EX.State = NpcState.STATE_ATTACK
+                    elseif attackStyle == 4 then
+                        Delirium_EX.State = NpcState.STATE_ATTACK
+                    end 
+                elseif sprite:IsFinished("Scream") or sprite:IsFinished("IdleNoLoop") or sprite:IsFinished("Blink") then
                     sprite:Play("IdleNoLoop",true)
                 end
+                --debugText = (tostring(attackStyle).." DELI HP:"..math.floor(Delirium_EX.HitPoints).."/"..Delirium_EX.MaxHitPoints.." "..Delirium_EX.State)
             end
         end
         if Delirium_EX.State == NpcState.STATE_ATTACK then -- and Delirium_EX.StateFrame%60 == 0
-            if sprite:IsFinished("Blink") then
+            debugText = "Atk "
+            if Delirium_EX.StateFrame >=80 then
+                --change state here
+                sprite:Play("Blink",true)
+                if RNG:RandomInt(3) == 0 then
+                    sfxManager:Play(SoundEffect.SOUND_DEATH_CARD, 5,  8, false,0.5)
+                end
                 Delirium_EX.StateFrame = 0
                 attackStyle = RNG:RandomInt(5)
-                Delirium_EX.State = NpcState.STATE_IDLE
-            elseif not sprite:IsPlaying("Blink") then 
-                Delirium_EX.StateFrame = Delirium_EX.StateFrame + 1
+                if attackStyle == 0 then
+                    Delirium_EX.State = NpcState.STATE_IDLE 
+                elseif attackStyle == 1 then
+                    Delirium_EX.State = NpcState.STATE_IDLE
+                elseif attackStyle == 2 then
+                    Delirium_EX.State = NpcState.STATE_MOVE
+                elseif attackStyle == 3 then
+                    Delirium_EX.State = NpcState.STATE_ATTACK2
+                elseif attackStyle == 4 then
+                    Delirium_EX.State = NpcState.STATE_ATTACK2
+                end 
+            elseif Delirium_EX.StateFrame %30 == 0 then
+                if Delirium_EX.ProjectileCooldown == 0 then
+                    Delirium_EX:FireBossProjectiles(10, objetive.Position, 0.3 , explodeContinuum)
+                    Delirium_EX.ProjectileCooldown = 20
+                end    
+            end
+            if (sprite:IsFinished("Scream") or sprite:IsFinished("IdleNoLoop") or sprite:IsFinished("Blink")) and Delirium_EX.StateFrame >= 40 then
+                sprite:Play("Blink",true)
+            elseif sprite:IsFinished("Scream") or sprite:IsFinished("IdleNoLoop") or sprite:IsFinished("Blink") then
+                sprite:Play("IdleNoLoop",true)
+            end
+        end
+        if Delirium_EX.State == NpcState.STATE_ATTACK2 then -- and Delirium_EX.StateFrame%60 == 0
+            debugText = "Atk2 "
+            if Delirium_EX.StateFrame >= 60 then 
+                sprite:Play("Blink",true)
+                if RNG:RandomInt(3) == 0 then
+                    sfxManager:Play(SoundEffect.SOUND_DEATH_CARD, 5,  8, false,0.5)
+                end
+                Delirium_EX.StateFrame = 0
+                attackStyle = RNG:RandomInt(5)
+                if attackStyle == 0 then
+                    Delirium_EX.State = NpcState.STATE_IDLE 
+                elseif attackStyle == 1 then
+                    Delirium_EX.State = NpcState.STATE_IDLE
+                elseif attackStyle == 2 then
+                    Delirium_EX.State = NpcState.STATE_MOVE
+                elseif attackStyle == 3 then
+                    Delirium_EX.State = NpcState.STATE_ATTACK
+                elseif attackStyle == 4 then
+                    Delirium_EX.State = NpcState.STATE_ATTACK
+                end 
+            end
+            if Delirium_EX.StateFrame %20 == 0 then
+                if Delirium_EX.ProjectileCooldown <= 0 then
+                    Delirium_EX:FireProjectiles(Delirium_EX.Position, Vector(15,20), 9, flowerTears)
+                end
+                Delirium_EX.ProjectileCooldown = 10
+            end
+            if (sprite:IsFinished("Scream") or sprite:IsFinished("IdleNoLoop") or sprite:IsFinished("Blink")) and Delirium_EX.StateFrame >= 100 then
+                sprite:Play("Blink",true)
+            elseif sprite:IsFinished("Scream") or sprite:IsFinished("IdleNoLoop") or sprite:IsFinished("Blink") then
+                sprite:Play("IdleNoLoop",true)
+            end
+            --debugText = (tostring(attackStyle).." DELI HP:"..math.floor(Delirium_EX.HitPoints).."/"..Delirium_EX.MaxHitPoints.." "..Delirium_EX.State)
+        end
+        if Delirium_EX.State == NpcState.STATE_MOVE then -- and Delirium_EX.StateFrame%60 == 0
+            debugText = "Move "
+            local freeSpace = Isaac.GetFreeNearPosition(Game():GetRoom():GetRandomPosition(20), 20)
+            if Delirium_EX.Child == nil then
+                Delirium_EX.Child = Isaac.Spawn(EntityType.ENTITY_EFFECT,EffectVariant.OCCULT_TARGET,20,freeSpace,Vector(0,0),Delirium_EX)
+            else
+                Delirium_EX.Child.SpriteScale = Vector(4,4)
+                Delirium_EX.Child.Color = Color(0.8,1,1,1,250/250,235/250,215/250)
+            end
+            if (sprite:IsFinished("Scream") or sprite:IsFinished("IdleNoLoop") or sprite:IsFinished("Blink")) and Delirium_EX.StateFrame >= 30 then
+                Delirium_EX.StateFrame = 0
+                Delirium_EX.Position = Delirium_EX.Child.Position
+                Delirium_EX.Color = Color(1,1,1,1)
+                sfxManager:Play(SoundEffect.SOUND_HELL_PORTAL1, 1,  8, false, 1)
+                Delirium_EX.Child:Remove()
+                attackStyle = RNG:RandomInt(5)
+                --debugText = (tostring(attackStyle).." DELI HP:"..math.floor(Delirium_EX.HitPoints).."/"..Delirium_EX.MaxHitPoints.." "..Delirium_EX.State)
+                if attackStyle == 0 then
+                    Delirium_EX.State = NpcState.STATE_ATTACK 
+                elseif attackStyle == 1 then
+                    Delirium_EX.State = NpcState.STATE_ATTACK
+                elseif attackStyle == 2 then
+                    Delirium_EX.State = NpcState.STATE_ATTACK2
+                elseif attackStyle == 3 then
+                    Delirium_EX.State = NpcState.STATE_ATTACK2
+                end 
+                Delirium_EX.StateFrame = 0
+            end
+            if Delirium_EX.StateFrame %4 == 0 then
+                Delirium_EX.Color = Color (1,1,1,(40-Delirium_EX.StateFrame)/40)
             end
             if sprite:IsFinished("Scream") or sprite:IsFinished("IdleNoLoop") or sprite:IsFinished("Blink") then
-                if Delirium_EX.StateFrame >= 20 then 
+                if Delirium_EX.StateFrame >= 40 then 
                     sprite:Play("Blink",true)
+                    if RNG:RandomInt(3) == 0 then
+                        sfxManager:Play(SoundEffect.SOUND_DEATH_CARD, 5,  8, false,0.5)
+                    end
                 elseif sprite:IsFinished("IdleNoLoop") or sprite:IsFinished("Blink") then
                     sprite:Play("IdleNoLoop",true)
                 end
             end
+            --debugText = tostring(Delirium_EX.Child==nil)..tostring(Delirium_EX.StateFrame)
         end
-        debugText = (attackStyle.." DELI HP:"..math.floor(Delirium_EX.HitPoints).."/"..Delirium_EX.MaxHitPoints.." "..Delirium_EX.State)
+
+    Delirium_EX.StateFrame = Delirium_EX.StateFrame +1
+    Delirium_EX.ProjectileCooldown = math.max(Delirium_EX.ProjectileCooldown-1,0)
+    debugText = debugText.." "..tostring(data.MaxdefeatedFoes).." "..tostring(data.defeatedFoes).." "
+    debugText = debugText.."HP"..tostring(math.floor(Delirium_EX.HitPoints)).."/"..tostring(Delirium_EX.MaxHitPoints)
     end
+
 end
 
 function LOVESICK:debug_text()
     Isaac.RenderText(debugText, 100, 100, 255, 0, 0, 255)
+    if runSave.persistent.TotalDamage == nil then runSave.persistent.TotalDamage = 0 end
+    Isaac.RenderText(tostring(math.floor(runSave.persistent.TotalDamage*100)/100),40,80, 0 ,1 ,0 ,0.8)
 end
 
-LOVESICK:AddCallback(ModCallbacks.MC_POST_RENDER, LOVESICK.debug_text);
 
-LOVESICK:AddCallback(ModCallbacks.MC_NPC_UPDATE, LOVESICK.update, DELIRIUM_EX_TYPE);
+
+LOVESICK:AddCallback(ModCallbacks.MC_NPC_UPDATE, LOVESICK.DeliExupdate, DELIRIUM_EX_TYPE);
+
+function LOVESICK:storeBossInQueue(table) --Stuff to store a defeated boss
+    if BossQueue[1] == nil then BossQueue[1] = table else
+        for i, v in ipairs(BossQueue) do 
+            if BossQueue[i][1] == table[1] and BossQueue[i][2] == table[2] and BossQueue[i][3] == table[3] then return 
+            elseif BossQueue[i+1] == nil and BossQueue[i]~= nil then BossQueue[i+1] = table return end
+        end
+    end
+end
+
+function LOVESICK:removeBossInQueue() --Remove bosses in order of deffeat
+    if BossQueue[1] == nil then return  else
+            local OldFirstValue = BossQueue[1]
+            for i, v in ipairs(BossQueue) do 
+                if BossQueue[i+1] == nil and BossQueue[i]~= nil then BossQueue[i] = BossQueue[i+1] return OldFirstValue
+            else
+                BossQueue[i] = BossQueue[i+1]
+            end
+        end
+    end
+end
+
+function LOVESICK:HowLongIs(_data)
+    for i, v in ipairs(_data) do 
+        if _data[i+1] == nil then return i end
+    end
+end
+
+--LOVESICK:AddCallback(ModCallbacks.MC_POST_RENDER, LOVESICK.debug_text);

@@ -2777,4 +2777,200 @@ function GetCurrentDimension() -- KingBobson: (get room dimension)
     return nil
 end
 
+        if Delirium_EX.StateFrame %30 == 0  then
+            if data.Childs == nil then data.Childs = 0 end
+            for _, ent in pairs(Isaac.GetRoomEntities()) do
+            --print(ent.Type,ent.Variant,ent.SubType)
+            if data.Childs == nil then data.Childs = 0 end
+            data.Childs = targets
+            for _, ent in pairs(Isaac.GetRoomEntities()) do
+                --print(ent.Type,ent.Variant,ent.SubType)
+                if ent.Type == EntityType.ENTITY_EFFECT and ent.Variant == EffectVariant.OCCULT_TARGET and ent.SubType == 20 then -- position = ent.Position 
+                    ent.Color.A = ent.FrameCount/120
+                    print(ent.FrameCount)
+                    if ent.FrameCount >= 120 then
+                        ent:Remove()
+                        local DefeatedFoe = LOVESICK:removeBossInQueue()
+                        local minion = Isaac.Spawn(DefeatedFoe[1],DefeatedFoe[3],DefeatedFoe[2],ent.Position,Vector.Zero,Delirium_EX)
+                        Delirium_EX.HitPoints = Delirium_EX.HitPoints - Delirium_EX.MaxHitPoints* (1/data.MaxdefeatedFoes)
+                        data.defeatedFoes = data.defeatedFoes + 1
+                        minion.MaxHitPoints = minion.MaxHitPoints + Delirium_EX.MaxHitPoints* (1/data.MaxdefeatedFoes)/2
+                        minion.HitPoints = minion.MaxHitPoints
+                        minion:GetSprite():Play("Appear",true)
+                        minion.Parent = Delirium_EX
+                        targets = targets + 1
+                    else
+                        targets = targets + 1
+                    end
+                end
+                if ent:IsBoss() then
+                    if ent.FrameCount >=600 then
+                        ent.Position = Delirium_EX.Position
+                    end
+                    if ent.Type == DELIRIUM_EX_TYPE then
+                    else
+                    targets = targets +1
+                    end
+                end
+            end
+            if targets >= 3 then 
+                if data.Childs < targets then data.Childs = targets end
+                if targets == 0 then Delirium_EX.State = NpcState.STATE_IDLE end
 
+            else
+                local freeSpace = Isaac.GetFreeNearPosition(Game():GetRoom():GetRandomPosition(20), 80)
+                local mark =  Isaac.Spawn(EntityType.ENTITY_EFFECT,EffectVariant.OCCULT_TARGET,20,freeSpace,Vector(0,0),Delirium_EX)
+                mark.Color = Color(0,1,1,1,0.3,0.3,0)
+                mark.SpriteScale = Vector(2,2)
+            end
+            end
+        end
+
+
+
+
+
+
+        if Delirium_EX.State == NpcState.STATE_ATTACK then -- and Delirium_EX.StateFrame%60 == 0
+            debugText = "Atk "
+            if sprite:IsFinished("Blink") and Delirium_EX.StateFrame >= 40 then
+                Delirium_EX.StateFrame = 0
+                attackStyle = RNG:RandomInt(5)
+                --debugText = (tostring(attackStyle).." DELI HP:"..math.floor(Delirium_EX.HitPoints).."/"..Delirium_EX.MaxHitPoints.." "..Delirium_EX.State)
+                if attackStyle == 0 then
+                    Delirium_EX.State = NpcState.STATE_IDLE 
+                elseif attackStyle == 1 then
+                    Delirium_EX.State = NpcState.STATE_IDLE
+                elseif attackStyle == 2 then
+                    Delirium_EX.State = NpcState.STATE_ATTACK2
+                elseif attackStyle == 3 then
+                    Delirium_EX.State = NpcState.STATE_MOVE
+                elseif attackStyle == 4 then
+                    Delirium_EX.State = NpcState.STATE_SPECIAL
+                end 
+                Delirium_EX.StateFrame = 0
+            elseif not sprite:IsPlaying("Blink") then 
+                Delirium_EX.StateFrame = Delirium_EX.StateFrame + 1
+            end
+            if Delirium_EX.StateFrame %30 == 0 then
+                Delirium_EX:FireBossProjectiles(4, objetive.Position, 0.4 , explodeContinuum)
+                Delirium_EX.ProjectileCooldown = 20
+            end
+            if sprite:IsFinished("Scream") or sprite:IsFinished("IdleNoLoop") or sprite:IsFinished("Blink") then
+                if Delirium_EX.StateFrame >= 40 then 
+                    sprite:Play("Blink",true)
+                elseif sprite:IsFinished("IdleNoLoop") or sprite:IsFinished("Blink") then
+                    sprite:Play("IdleNoLoop",true)
+                end
+                
+            end
+        end
+        if Delirium_EX.State == NpcState.STATE_ATTACK2 then -- and Delirium_EX.StateFrame%60 == 0
+            debugText = "Atk2 "
+            if sprite:IsFinished("Blink") and Delirium_EX.StateFrame >= 100 then
+                Delirium_EX.StateFrame = 0
+                attackStyle = RNG:RandomInt(5)
+                --debugText = (tostring(attackStyle).." DELI HP:"..math.floor(Delirium_EX.HitPoints).."/"..Delirium_EX.MaxHitPoints.." "..Delirium_EX.State)
+                if attackStyle == 0 then
+                    Delirium_EX.State = NpcState.STATE_IDLE 
+                elseif attackStyle == 1 then
+                    Delirium_EX.State = NpcState.STATE_ATTACK
+                elseif attackStyle == 2 then
+                    Delirium_EX.State = NpcState.STATE_IDLE
+                elseif attackStyle == 3 then
+                    Delirium_EX.State = NpcState.STATE_MOVE
+                elseif attackStyle == 4 then
+                    Delirium_EX.State = NpcState.STATE_SPECIAL
+                end 
+                Delirium_EX.StateFrame = 0
+            elseif not sprite:IsPlaying("Blink") then 
+                Delirium_EX.StateFrame = Delirium_EX.StateFrame + 1
+            end
+            if Delirium_EX.StateFrame %20 == 0 then
+                --Delirium_EX:FireBossProjectiles(4, objetive.Position, 0 , explodeContinuum)
+                Delirium_EX:FireProjectiles(Delirium_EX.Position, Vector(15,20), 9, flowerTears)
+                Delirium_EX.ProjectileCooldown = 10
+            end
+            if sprite:IsFinished("Scream") or sprite:IsFinished("IdleNoLoop") or sprite:IsFinished("Blink") then
+                if Delirium_EX.StateFrame >= 100 then 
+                    sprite:Play("Blink",true)
+                elseif sprite:IsFinished("IdleNoLoop") or sprite:IsFinished("Blink") then
+                    sprite:Play("IdleNoLoop",true)
+                end
+            end
+            --debugText = (tostring(attackStyle).." DELI HP:"..math.floor(Delirium_EX.HitPoints).."/"..Delirium_EX.MaxHitPoints.." "..Delirium_EX.State)
+        end
+        if Delirium_EX.State == NpcState.STATE_MOVE then -- and Delirium_EX.StateFrame%60 == 0
+            debugText = "Move "
+            local freeSpace = Isaac.GetFreeNearPosition(Game():GetRoom():GetRandomPosition(20), 20)
+            if Delirium_EX.Child == nil then
+                Delirium_EX.Child = Isaac.Spawn(EntityType.ENTITY_EFFECT,EffectVariant.OCCULT_TARGET,20,freeSpace,Vector(0,0),Delirium_EX)
+            else
+                Delirium_EX.Child.SpriteScale = Vector(4,4)
+                Delirium_EX.Child.Color = Color(0.8,1,1,1,250/250,235/250,215/250)
+            end
+            if (sprite:IsFinished("Blink") or sprite:IsFinished("IdleNoLoop")) and Delirium_EX.StateFrame >= 30 then
+                Delirium_EX.StateFrame = 0
+                Delirium_EX.Position = Delirium_EX.Child.Position
+                Delirium_EX.Color = Color(1,1,1,1)
+                Delirium_EX.Child:Remove()
+                attackStyle = RNG:RandomInt(5)
+                --debugText = (tostring(attackStyle).." DELI HP:"..math.floor(Delirium_EX.HitPoints).."/"..Delirium_EX.MaxHitPoints.." "..Delirium_EX.State)
+                if attackStyle == 0 then
+                    Delirium_EX.State = NpcState.STATE_IDLE 
+                elseif attackStyle == 1 then
+                    Delirium_EX.State = NpcState.STATE_ATTACK
+                elseif attackStyle == 2 then
+                    Delirium_EX.State = NpcState.STATE_ATTACK2
+                elseif attackStyle == 3 then
+                    Delirium_EX.State = NpcState.STATE_IDLE
+                end 
+                Delirium_EX.StateFrame = 0
+            elseif not sprite:IsPlaying("Blink") then 
+                Delirium_EX.StateFrame = Delirium_EX.StateFrame + 1
+            end
+            if Delirium_EX.StateFrame %4 == 0 then
+                Delirium_EX.Color = Color (1,1,1,(40-Delirium_EX.StateFrame)/40)
+            end
+            if sprite:IsFinished("Scream") or sprite:IsFinished("IdleNoLoop") or sprite:IsFinished("Blink") then
+                if Delirium_EX.StateFrame >= 40 then 
+                    sprite:Play("Blink",true)
+                elseif sprite:IsFinished("IdleNoLoop") or sprite:IsFinished("Blink") then
+                    sprite:Play("IdleNoLoop",true)
+                end
+            end
+            --debugText = tostring(Delirium_EX.Child==nil)..tostring(Delirium_EX.StateFrame)
+        end
+        if Delirium_EX.State == NpcState.STATE_SPECIAL then 
+            debugText = "special "
+            
+            
+            if Delirium_EX.StateFrame >= 120 then
+                attackStyle = RNG:RandomInt(5)
+                if attackStyle == 0 then
+                    Delirium_EX.State = NpcState.STATE_IDLE 
+                elseif attackStyle == 1 then
+                    Delirium_EX.State = NpcState.STATE_ATTACK
+                elseif attackStyle == 2 then
+                    Delirium_EX.State = NpcState.STATE_ATTACK2
+                elseif attackStyle == 3 then
+                    Delirium_EX.State = NpcState.STATE_MOVE
+                elseif attackStyle == 4 then
+                    Delirium_EX.State = NpcState.STATE_ATTACK
+                end 
+                Delirium_EX.StateFrame = 0
+            end
+            
+            
+            
+            
+            Delirium_EX.StateFrame = Delirium_EX.StateFrame + 1
+            if sprite:IsFinished("Scream") or sprite:IsFinished("IdleNoLoop") or sprite:IsFinished("Blink") then
+                if Delirium_EX.StateFrame%50 == 0 then 
+                    sprite:Play("Blink",true)
+                elseif sprite:IsFinished("IdleNoLoop") or sprite:IsFinished("Blink") then
+                    sprite:Play("IdleNoLoop",true)
+                end
+            end
+            debugText= debugText.." "..tostring(targets)
+        end

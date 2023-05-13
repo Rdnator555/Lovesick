@@ -104,6 +104,27 @@ function Content:AddModConfigOptions(settings,HasFixes)
                             return TotalText end
                     })
                 end
+                ModConfigMenu.AddText(LoveSick, "Settings", function() return "Deli Reworked(WIP)" end)
+    
+                ModConfigMenu.AddSetting(LoveSick, "Settings", { --DeliRework
+                    Type = ModConfigMenu.OptionType.BOOLEAN,
+                    CurrentSetting = function()
+                        if settings.DeliRework == nil then
+                            settings.DeliRework = false
+                        end
+                        return settings.DeliRework end,
+                    Display = function()
+                        local onOff = "Off"
+                        if settings.DeliRework then onOff = "On" end
+                        return 'Deli Rework: ' .. onOff end,
+                    OnChange = function(currentBool)
+                        settings.DeliRework = currentBool
+                        LOVESICK.SaveSettings() end,
+                    Info = function()
+                        local Text = settings.DeliRework and " " or " not "
+                        local TotalText = "Deli will" .. Text .. " be reworked."
+                        return TotalText end
+                })
     end
 end
 
