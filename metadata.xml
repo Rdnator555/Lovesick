@@ -1,47 +1,8 @@
-<?xml version="1.0" encoding="UTF-8"?>
 <metadata>
-    <name>Lovesick</name>
-    <directory>lovesick</directory>
-    <id>2964089496</id>
-    <description>Small mod (at the moment)
-I aim at make something quite big with mods compatibility, add some lore and a way to make a character that evolves with your actions.
-&quot;Open your heart or turn it into stone&quot;
-And no more lore yet...
-
-Including the first shielder of the game for the people that struggle with their skill issues.
-
-The Faithfull
-
-Starts with 1 red heart, one full bone heart and one soul heart.
-Has the crow heart trinket gulped and the item Glaucoma.
-This pocket item, the Locked Heart, will be explained with his main gimmick.
-
-STRESS
-Kinda stressfull tbh.
-
-This character has a heartbeat that can't be muted (at the moment) that is linked with your stress.
-The stress is in reality your heartbeat or BPM. It can raise up to 120 (240 with birthright).
-On hit you lose 1/3 or 15 of stress, the mas amount between those two.
-If it reaches 0, you are dead.
-
-You gain stress when hitting enemies. The ammount is proportional to your dmg.
-Your luck keep you stress at the middle, when not in combat.
-
-Hitting enemies will deal bonus damage based on how stresses you are.
-A flat dmg that goes from 0-2 times your dmg if near zero or 120 stress (with birthright goes from 0-4 at max stress)
-A extra damage is dealt based on how many health has lost the enemy, up to a 0.05% at max stress.
-
-The pocket active, Locked Heart, on use el spend one key and grant 15 shuel charges, that. will be spended blocking your own damage or co-op dmg, but also will block your extra g on high stress.
-This active has synergies with all battery items.
-
-The birthright doubles your max health, and adds a 30% of getting half red hearts killing.
-
-Any  coder/spriter/help in general, msg me</description>
-    <version>1.43</version>
-    <visibility>Public</visibility>
-    <tag id="Lua"/>
-    <tag id="Items"/>
-    <tag id="Active Items"/>
-    <tag id="Player Characters"/>
-    <tag id="Tweaks"/>
+	<name>Lovesick</name>
+	<directory>lovesick</directory>
+	<description/>
+	<version>1.0</version>
+	<visibility/>
 </metadata>
+

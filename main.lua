@@ -275,7 +275,7 @@ end)
 
 
 local game = Game()
-local sfxManager = SFXManager()
+local sfxManager = SFXManager() 
 local level = Game():GetLevel()
 local stage = level:GetStage()
 local curTime = 0
@@ -611,7 +611,7 @@ function RickSetup(rickplayer)
     player:AddSoulHearts(2) 
     --print("startup for player n:",rickplayer)
     player:AddTrinket(TrinketType.TRINKET_CROW_HEART, false)
-    player:UseActiveItem(CollectibleType.COLLECTIBLE_SMELTER, false, false, true, false, -1, 0)           
+    player:UseActiveItem(CollectibleType.COLLECTIBLE_SMELTER, false, false, true, false, ActiveSlot.SLOT_PRIMARY)           
     --local RickHair = Isaac.GetCostumeIdByPath("gfx/characters/character_rick_hair.anm2")
     --player:AddNullCostume(RickHair)
     RickValues.StressMax.Type = table
@@ -727,9 +727,6 @@ function getPlayerId(playerToIndex, cache)
 end
 
 local function onCacheLovesick(_,player, cache)
-    ---@param _ any
-    ---@param player EntityPlayer
-    ---@param cache CacheFlag | BitSet128
     --print(getPlayerId(player),RickValues.IsAlive[getPlayerId(player)])
     local p = getPlayerId(player)
     LOVESICK:ReloadDataNeeded()
@@ -1231,12 +1228,24 @@ function LOVESICK:EntityHit(Entity, Amount, DamageFlags, Source, CountdownFrames
                             local heart = Isaac.Spawn(EntityType.ENTITY_PICKUP, 10, 0, Entity.Position, Vector(0,0), nil)
                             heart:ToPickup().Timeout = 60 
                             Entity:BloodExplode()
-                            game:BombDamage(Entity.Position, player.Damage/2, 45, true, player, player.TearFlags | TearFlags.TEAR_FEAR, DamageFlag.DAMAGE_NOKILL, false)
+                            --game:BombDamage(Entity.Position, player.Damage/2, 45, true, player, player.TearFlags | TearFlags.TEAR_FEAR, DamageFlag.DAMAGE_NOKILL, false)
+                            local enemies = Isaac.FindInRadius(Entity.Position, 40, EntityPartition.ENEMY)
+                            for _, enemy in ipairs(enemies) do
+                                if enemy:IsVulnerableEnemy()then
+                                    enemy:TakeDamage(player.Damage, 0, EntityRef(Entity), 0)    
+                                end
+                            end
                             --if newHeart ~= nil then newHeart:ToPickup().Timeout = 25 end
                         end
                     elseif (Entity:HasMortalDamage() or Entity.HitPoints <= ((Amount * pierceDMG) + stressDMG)) and RickValues.Adrenaline[p] == true then
                             Entity:BloodExplode()
-                            game:BombDamage(Entity.Position, player.Damage/2, 45, true, player, player.TearFlags | TearFlags.TEAR_FEAR, DamageFlag.DAMAGE_NOKILL, false)
+                            --game:BombDamage(Entity.Position, player.Damage/2, 45, true, player, player.TearFlags | TearFlags.TEAR_FEAR, DamageFlag.DAMAGE_NOKILL, false)
+                            local enemies = Isaac.FindInRadius(Entity.Position, 40, EntityPartition.ENEMY)
+                            for _, enemy in ipairs(enemies) do
+                                if enemy:IsVulnerableEnemy()then
+                                    enemy:TakeDamage(player.Damage, 0, EntityRef(Entity), 0)    
+                                end
+                            end                    
                     else
                         Entity:TakeDamage((Amount * pierceDMG) + stressDMG, DamageFlag.DAMAGE_IGNORE_ARMOR, EntityRef(Entity), 0)
                     end
@@ -1247,12 +1256,24 @@ function LOVESICK:EntityHit(Entity, Amount, DamageFlags, Source, CountdownFrames
                             local heart = Isaac.Spawn(EntityType.ENTITY_PICKUP, 10, 0, Vector(Entity.Position.X,Entity.Position.Y), Vector(0,0), nil)
                             heart:ToPickup().Timeout = 60 
                             Entity:BloodExplode()
-                            game:BombDamage(Entity.Position, player.Damage/2, 45, true, player, player.TearFlags | TearFlags.TEAR_FEAR, DamageFlag.DAMAGE_NOKILL, false)
+                            --game:BombDamage(Entity.Position, player.Damage/2, 45, true, player, player.TearFlags | TearFlags.TEAR_FEAR, DamageFlag.DAMAGE_NOKILL, false)
+                            local enemies = Isaac.FindInRadius(Entity.Position, 40, EntityPartition.ENEMY)
+                            for _, enemy in ipairs(enemies) do
+                                if enemy:IsVulnerableEnemy()then
+                                    enemy:TakeDamage(player.Damage, 0, EntityRef(Entity), 0)    
+                                end
+                            end
                             --if newHeart ~= nil then newHeart:ToPickup().Timeout = 25 end
                         end
                     elseif (Entity:HasMortalDamage() or Entity.HitPoints <= ((Amount * pierceDMG) + stressDMG)) and RickValues.Adrenaline[p] == true then
                         Entity:BloodExplode()
-                        game:BombDamage(Entity.Position, player.Damage/2, 45, true, player, player.TearFlags | TearFlags.TEAR_FEAR, DamageFlag.DAMAGE_NOKILL, false)
+                        --game:BombDamage(Entity.Position, player.Damage/2, 45, true, player, player.TearFlags | TearFlags.TEAR_FEAR, DamageFlag.DAMAGE_NOKILL, false)
+                        local enemies = Isaac.FindInRadius(Entity.Position, 40, EntityPartition.ENEMY)
+                            for _, enemy in ipairs(enemies) do
+                                if enemy:IsVulnerableEnemy()then
+                                    enemy:TakeDamage(player.Damage, 0, EntityRef(Entity), 0)    
+                                end
+                            end
                     else
                         Entity:TakeDamage((Amount * pierceDMG) + stressDMG, DamageFlag.DAMAGE_IGNORE_ARMOR, EntityRef(Entity), 0)    
                     end
@@ -1263,12 +1284,24 @@ function LOVESICK:EntityHit(Entity, Amount, DamageFlags, Source, CountdownFrames
                             local heart = Isaac.Spawn(EntityType.ENTITY_PICKUP, 10, 0, Vector(Entity.Position.X,Entity.Position.Y), Vector(0,0), nil)
                             heart:ToPickup().Timeout = 60 
                             Entity:BloodExplode()
-                            game:BombDamage(Entity.Position, player.Damage/2, 45, true, player, player.TearFlags | TearFlags.TEAR_FEAR, DamageFlag.DAMAGE_NOKILL, false)
+                            --game:BombDamage(Entity.Position, player.Damage/2, 45, true, player, player.TearFlags | TearFlags.TEAR_FEAR, DamageFlag.DAMAGE_NOKILL, false)
+                            local enemies = Isaac.FindInRadius(Entity.Position, 40, EntityPartition.ENEMY)
+                            for _, enemy in ipairs(enemies) do
+                                if enemy:IsVulnerableEnemy()then
+                                    enemy:TakeDamage(player.Damage, 0, EntityRef(Entity), 0)    
+                                end
+                            end
                             --if newHeart ~= nil then newHeart:ToPickup().Timeout = 25 end
                         end
                     elseif (Entity:HasMortalDamage() or Entity.HitPoints <= ((Amount * pierceDMG) + stressDMG)) and RickValues.Adrenaline[p] == true then
                         Entity:BloodExplode()
-                        game:BombDamage(Entity.Position, player.Damage/2, 45, true, player, player.TearFlags | TearFlags.TEAR_FEAR, DamageFlag.DAMAGE_NOKILL, false)
+                        --game:BombDamage(Entity.Position, player.Damage/2, 45, true, player, player.TearFlags | TearFlags.TEAR_FEAR, DamageFlag.DAMAGE_NOKILL, false)
+                        local enemies = Isaac.FindInRadius(Entity.Position, 40, EntityPartition.ENEMY)
+                            for _, enemy in ipairs(enemies) do
+                                if enemy:IsVulnerableEnemy()then
+                                    enemy:TakeDamage(player.Damage, 0, EntityRef(Entity), 0)    
+                                end
+                            end
                     else
                         Entity:TakeDamage((Amount * pierceDMG/6) + stressDMG/6, DamageFlag.DAMAGE_IGNORE_ARMOR, EntityRef(Entity), 0)    
                     end
@@ -1388,7 +1421,8 @@ function LOVESICK:preHeartCollision(Pickup, Entity, Low)
         if player:GetPlayerType() == rickId  then   --and RickValues.LockShield[number] > 0
             local charge=player:GetActiveCharge(ActiveSlot.SLOT_POCKET)
             local subcharge = player:GetBatteryCharge(ActiveSlot.SLOT_POCKET)
-            if Pickup.Variant == PickupVariant.PICKUP_HEART then
+            if (Pickup.Variant == PickupVariant.PICKUP_HEART or Pickup.Variant == 1022 or Pickup.Variant == 1024 or Pickup.Variant == 1025 or Pickup.Variant == 1028 or Pickup.Variant == 1029 or Pickup.Variant == 1030)  then
+               
                 if (player:HasCollectible(CollectibleType.COLLECTIBLE_BATTERY,false)and subcharge < 15) or charge < 15 and not Pickup:IsShopItem() then
                     --print((player:GetSoulHearts()+ player:GetEffectiveMaxHearts())>=(24-(player:GetBrokenHearts()*2)))
                     if player:GetHearts() >= player:GetEffectiveMaxHearts() then
@@ -1492,6 +1526,66 @@ function LOVESICK:preHeartCollision(Pickup, Entity, Low)
                                 end
                             end
                         elseif Pickup.SubType == 8 then
+                            LOVESICK:PickupKill(Pickup)
+                            if player:HasCollectible(CollectibleType.COLLECTIBLE_BATTERY,false) then
+                                if subcharge < 15 then
+                                    player:SetActiveCharge(math.min(30,charge+subcharge+2), ActiveSlot.SLOT_POCKET)
+                                end
+                            else
+                                if charge < 15 then
+                                    player:SetActiveCharge(math.min(15,charge+2), ActiveSlot.SLOT_POCKET)
+                                end
+                            end
+                        elseif Pickup.Variant == 1022 then
+                            --print("isblack")
+                            LOVESICK:PickupKill(Pickup)
+                            sfxManager:Play(SoundEffect.SOUND_DEATH_CARD, 0.6,  8, false, 1.3)
+                            for _, ent in pairs(Isaac.GetRoomEntities()) do
+                                if ent:IsVulnerableEnemy() then
+                                  ent:AddPoison(EntityRef(player), 63, player.Damage)
+                                  player:AddBlueFlies(1, player.Position, player)
+                                end
+                            end
+                            if player:HasCollectible(CollectibleType.COLLECTIBLE_BATTERY,false) then
+                                if subcharge < 15 then
+                                    player:SetActiveCharge(math.min(30,charge+subcharge+2), ActiveSlot.SLOT_POCKET)
+                                end
+                            else
+                                if charge < 15 then
+                                    player:SetActiveCharge(math.min(15,charge+2), ActiveSlot.SLOT_POCKET)
+                                end
+                            end
+                            LOVESICK:PickupKill(Pickup)
+                            sfxManager:Play(SoundEffect.SOUND_DEATH_CARD, 0.6,  8, false, 1)
+                            for _, ent in pairs(Isaac.GetRoomEntities()) do
+                                if ent:IsVulnerableEnemy() then
+                                  ent:TakeDamage(player.Damage, DamageFlag.DAMAGE_SPAWN_TEMP_HEART, EntityRef(player), 0)
+                                end
+                            end
+                            if player:HasCollectible(CollectibleType.COLLECTIBLE_BATTERY,false) then
+                                if subcharge < 15 then
+                                    player:SetActiveCharge(math.min(30,charge+subcharge+2), ActiveSlot.SLOT_POCKET)
+                                end
+                            else
+                                if charge < 15 then
+                                    player:SetActiveCharge(math.min(15,charge+2), ActiveSlot.SLOT_POCKET)
+                                end
+                            end
+                        elseif Pickup.Variant == 1024 then
+                            Isaac.Spawn(EntityType.ENTITY_EFFECT,1736,0,player.Position,Vector.Zero,player)
+                            Isaac.Spawn(EntityType.ENTITY_EFFECT,1736,0,player.Position,Vector.Zero,player)
+                            LOVESICK:PickupKill(Pickup)
+                            if player:HasCollectible(CollectibleType.COLLECTIBLE_BATTERY,false) then
+                                if subcharge < 15 then
+                                    player:SetActiveCharge(math.min(30,charge+subcharge+5), ActiveSlot.SLOT_POCKET)
+                                end
+                            else
+                                if charge < 15 then
+                                    player:SetActiveCharge(math.min(15,charge+5), ActiveSlot.SLOT_POCKET)
+                                end
+                            end
+                        elseif Pickup.Variant == 1025 then
+                            Isaac.Spawn(EntityType.ENTITY_EFFECT,1736,0,player.Position,Vector.Zero,player)
                             LOVESICK:PickupKill(Pickup)
                             if player:HasCollectible(CollectibleType.COLLECTIBLE_BATTERY,false) then
                                 if subcharge < 15 then
@@ -1903,7 +1997,9 @@ function LOVESICK:Stress()
             else
                 renderPos = Isaac.WorldToScreen(player.Position) 
             end
-
+            if beat[p] and Game():GetFrameCount()/10 == math.floor(Game():GetFrameCount()/10) then
+                LOVESICK:UpdateBeat(player)
+            end
             --Isaac.RenderText(tostring(MegasatanFix),renderPos.X,renderPos.Y-28, 0 ,1 ,0 ,0.8)
         LOVESICK:renderAchievement()
         LOVESICK:displayQueue()
@@ -1916,7 +2012,7 @@ function LOVESICK:Stress()
                 shield[p]:Render(Vector(renderPos.X,renderPos.Y -24 ), Vector(0,0), Vector(0,0))
             end             
         end
-        if player:GetPlayerType() == rickbId and newRoomDelay<=0 then
+        if beat[p] and player:GetPlayerType() == rickbId and newRoomDelay<=0 then
             LOVESICK:RenderBeat(player,renderPos)
         end
         if player:GetPlayerType() == rickId and newRoomDelay<=0 then
@@ -2085,7 +2181,7 @@ function Timer()
     _130BPM = math.floor(curTime/5.54*4)
     _190BPM = math.floor(curTime/3.78*4)
 
-    
+
     
     
     for p=0, game:GetNumPlayers()-1 do
@@ -2129,6 +2225,7 @@ function Timer()
         if runSave.persistent.MorphineDebuff[p] == nil then runSave.persistent.MorphineDebuff[p] = 0 end
         
         if Secs ~= oldSecs then
+            
             --print("help2",RickValues.Stress[p]) 
             if runSave.persistent.MorphineDebuff[p] ~= nil then runSave.persistent.MorphineDebuff[p]=math.max(0,runSave.persistent.MorphineDebuff[p]-0.1)end
             if runSave.persistent.MorphineTime[p] > 0 then runSave.persistent.MorphineTime[p] = runSave.persistent.MorphineTime[p] - 1 end
@@ -2146,6 +2243,7 @@ function Timer()
             
             if number == game:GetNumPlayers()-1 then
                 oldSecs = Secs 
+                
                 --print("esto2",Secs,oldSecs)
             end 
             if player:GetPlayerType() == rickId then
@@ -2257,17 +2355,17 @@ function Timer()
                 --old120BPM = _120BPM
             end
         end   
-        if _190BPM ~= old190BPM  then
-            --if beat[number]:GetFrame() == 6 then
-            --    sfxManager:Play(Isaac.GetSoundIdByName("Beat_1"), 1,  8, false, 1.1)
-            --end
-            --if beat[number]:IsFinished("Easy") then
-            --    beat[number]:Play("Easy",true)
-            --end
-            --beat[number]:Update()
-            --if number == game:GetNumPlayers()-1 then 
-            --    old190BPM = _190BPM
-            --end
+        if beat[p] and _190BPM ~= old190BPM  then
+            if beat[number]:GetFrame() == 6 then
+                sfxManager:Play(Isaac.GetSoundIdByName("Beat_1"), 1,  8, false, 1.1)
+            end
+            if beat[number]:IsFinished("Easy") then
+                beat[number]:Play("Easy",true)
+            end
+            beat[number]:Update()
+            if number == game:GetNumPlayers()-1 then 
+                old190BPM = _190BPM
+            end
         end   
     end
 end
@@ -2359,7 +2457,7 @@ local function postNPCDeath(_,npc)
                 IsCustomDeliFight = true
             end
         end
-        if not IsCustomDeliFight and not(npc.Type == DELIRIUM_EX_TYPE and npc.Variant == DELIRIUM_EX_VARIANT ) and not (npc.Type == EntityType.ENTITY_DELIRIUM) then
+        if not IsCustomDeliFight and not(npc.Type == DELIRIUM_EX_TYPE and npc.Variant == DELIRIUM_EX_VARIANT ) and not ((npc.Type == EntityType.ENTITY_DELIRIUM) or (npc.Type == EntityType.ENTITY_ISAAC and npc.Variant == 2) or (npc.Type == EntityType.ENTITY_HUSH) or (npc.Type == EntityType.ENTITY_MEGA_SATAN) or (npc.Type == EntityType.ENTITY_MEGA_SATAN_2) or (npc.Type == EntityType.ENTITY_GIDEON) or (npc.Type == EntityType.ENTITY_MOTHER) or (npc.Type == EntityType.ENTITY_MOTHERS_SHADOW)) then
             LOVESICK:storeBossInQueue(bossData)
         else
             if not npc.Type == DELIRIUM_EX_TYPE  and not npc.Variant == DELIRIUM_EX_VARIANT and not npc.Parent then
@@ -2376,12 +2474,11 @@ local function postNPCDeath(_,npc)
         end
         
         LOVESICK.SaveModData()
-        if npc.Type == DELIRIUM_EX_TYPE and npc.Variant == DELIRIUM_EX_VARIANT then
+        if npc.Type == DELIRIUM_EX_TYPE and npc.Variant == DELIRIUM_EX_VARIANT and npc.SubType == 0 then
             local Deli = Isaac.Spawn(EntityType.ENTITY_DELIRIUM,0,0,npc.Position,Vector.Zero,npc)
             Deli.Parent = npc
             npc:Remove()
             Deli.HitPoints = 1
-            Deli:TakeDamage(999,DamageFlag.DAMAGE_IGNORE_ARMOR,EntityRef(npc),0)
             --Deli:ToNPC().State = NpcState.STATE_DEATH
             for _, ent in pairs(Isaac.GetRoomEntities()) do
                 --print(ent.Type,ent.Variant,ent.SubType)
@@ -2405,10 +2502,13 @@ end
 LOVESICK:AddCallback(ModCallbacks.MC_POST_NPC_DEATH, postNPCDeath)
 
 local function postNPCInit(_,npc)
+    
     LOVESICK.LoadModData()
-    if dataCache.file.settings.DeliRework == true and npc.SpawnerEntity.Type == nil  then
+    if dataCache.file.settings.DeliRework == true and not (npc.SpawnerType==DELIRIUM_EX_TYPE) then
         Isaac.Spawn(DELIRIUM_EX_TYPE,DELIRIUM_EX_VARIANT,0,npc.Position,Vector.Zero,npc)
         npc:Remove()
+    elseif dataCache.file.settings.DeliRework == true and (npc.SpawnerType==DELIRIUM_EX_TYPE) then
+        npc:TakeDamage(999,DamageFlag.DAMAGE_IGNORE_ARMOR,EntityRef(npc),0)
     end
 end
 LOVESICK:AddCallback(ModCallbacks.MC_POST_NPC_INIT, postNPCInit, EntityType.ENTITY_DELIRIUM)
@@ -2440,15 +2540,15 @@ function LOVESICK:renderAchievement()
     local room = game:GetRoom()
   	local center = room:GetCenterPos()
   	local topLeft = room:GetTopLeftPos()
-  	local pos = Isaac.WorldToRenderPosition(center, true)
+  	local pos = Isaac.WorldToRenderPosition(center)
 
   	-- Adjust position depending on room size
   	if (room:GetRoomShape() == RoomShape.ROOMSHAPE_1x2 or room:GetRoomShape() == RoomShape.ROOMSHAPE_IIV) then
-  		pos = Isaac.WorldToRenderPosition(Vector(center.X, topLeft.Y*2.0), true)
+  		pos = Isaac.WorldToRenderPosition(Vector(center.X, topLeft.Y*2.0))
   	elseif (room:GetRoomShape() == RoomShape.ROOMSHAPE_2x1 or room:GetRoomShape() == RoomShape.ROOMSHAPE_IIH) then
-  		pos = Isaac.WorldToRenderPosition(Vector(topLeft.X*5.5, center.Y), true)
+  		pos = Isaac.WorldToRenderPosition(Vector(topLeft.X*5.5, center.Y))
   	elseif (room:GetRoomShape() >= RoomShape.ROOMSHAPE_2x2) then
-  		pos = Isaac.WorldToRenderPosition(Vector(topLeft.X*5.5, topLeft.Y*2.0), true)
+  		pos = Isaac.WorldToRenderPosition(Vector(topLeft.X*5.5, topLeft.Y*2.0))
   	end
 	achievement:Render(pos, Vector(0, 0), Vector(0, 0))	
 end
@@ -2493,7 +2593,7 @@ function LOVESICK:OnNewStage()
     for p = 0, game:GetNumPlayers() - 1 do
         local player = Isaac.GetPlayer(p)
         if player:HasCollectible(Isaac.GetItemIdByName("Box of Leftovers"),false) then
-            player:UseActiveItem(CollectibleType.COLLECTIBLE_SMELTER, false, false, true, false, -1, 0)    
+            player:UseActiveItem(CollectibleType.COLLECTIBLE_SMELTER, false, false, true,false,ActiveSlot.SLOT_PRIMARY)    
         end
         runSave.level.SunsetClock = 90
         runSave.level.KindSoulDead = {}
@@ -2763,7 +2863,18 @@ function LOVESICK:RenderBeat(player,renderPos)
     --LOVESICK:ReloadDataNeeded()
     --print("bfs")
     beat[p]:Render(Vector(renderPos.X,renderPos.Y), Vector(0,0), Vector(0,0))
-    note1[p]:Render(Vector(renderPos.X,renderPos.Y-35), Vector(0,0), Vector(0,0))
+    note1[p]:Render(Vector(renderPos.X-24,renderPos.Y-35), Vector(0,0), Vector(0,0))
+    note2[p]:Render(Vector(renderPos.X-8,renderPos.Y-35), Vector(0,0), Vector(0,0))
+    note3[p]:Render(Vector(renderPos.X+8,renderPos.Y-35), Vector(0,0), Vector(0,0))
+    note4[p]:Render(Vector(renderPos.X+24,renderPos.Y-35), Vector(0,0), Vector(0,0))
+end
+
+function LOVESICK:UpdateBeat(player)
+    local p =  getPlayerId(player)
+    note1[p]:Update()
+    note2[p]:Update()
+    note3[p]:Update()
+    note4[p]:Update()
 end
 
 function LOVESICK:RestoreHairOnDice(_,RNG,EntityPlayer,UseFlags)
@@ -2839,7 +2950,7 @@ function LOVESICK:AfterTear()
         --DELI SOUND DOWN HERE
         --sfxManager:Play(SoundEffect.SOUND_DEATH_CARD, 5,  8, false,0.5)
         LOVESICK.LoadModData()
-        --print(dataCache.file.settings.DeliRework)
+        
 
     end
 end
@@ -3186,3 +3297,52 @@ function LOVESICK:HowLongIs(_data)
 end
 
 --LOVESICK:AddCallback(ModCallbacks.MC_POST_RENDER, LOVESICK.debug_text);
+function LOVESICK:InitNPC(ent,var,sub)
+    print(ent,var,sub)
+end
+--LOVESICK:AddCallback(ModCallbacks.MC_PRE_ENTITY_SPAWN, LOVESICK.InitNPC);
+
+function LOVESICK:OnTearInit(tear)
+    if tear.SpawnerEntity:ToPlayer():HasCollectible(Isaac.GetItemIdByName("Void Shot"),true) then
+        print("HasIt")
+    end
+end
+--LOVESICK:AddCallback(ModCallbacks.MC_POST_TEAR_INIT, LOVESICK.OnTearInit);
+
+local function MegaBombFix(_,pickup)
+    if HasFixes then
+    else
+    local data = pickup:GetData()
+    if pickup.FrameCount == 0 then
+        data.Continued = true
+    elseif not data.Continued and (pickup:GetSprite():GetAnimation() == "Appear")  then
+        print("this")
+        local rng = pickup:GetDropRNG()
+        local BumBeggars = Isaac.FindByType(EntityType.ENTITY_SLOT, 9, 0, false, false)
+        local extraChance = 0
+        for p=0, game:GetNumPlayers()-1 do
+            local player= Isaac.GetPlayer(p)
+            if player:GetTrinketMultiplier(Isaac.GetTrinketIdByName("Big Fuse"))>0 then
+                extraChance = extraChance + player:GetTrinketMultiplier(Isaac.GetTrinketIdByName("Big Fuse"))*5
+            end
+        end
+        if rng:RandomInt(1001)<=5 + extraChance then
+            pickup:Remove()
+            Isaac.Spawn(EntityType.ENTITY_PICKUP,PickupVariant.PICKUP_BOMB,BombSubType.BOMB_GIGA,pickup.Position,pickup.Velocity,pickup)
+            --pickup:ToPickup():Morph(EntityType.ENTITY_PICKUP, PickupVariant.PICKUP_BOMB, BombVariant.BOMB_GIGA, true, true, true)
+        elseif BumBeggars[1] then
+            for n=1, LOVESICK:HowLongIs(BumBeggars) do
+                if pickup.Position:Distance(BumBeggars[1].Position) and pickup:Exists() and rng:RandomInt(101)<=5 + extraChance then
+                    pickup:Remove()
+                    Isaac.Spawn(EntityType.ENTITY_PICKUP,PickupVariant.PICKUP_BOMB,BombSubType.BOMB_GIGA,pickup.Position,pickup.Velocity,pickup)
+                end
+            end
+        end
+        data.Continued = true
+    end
+    end
+end
+LOVESICK:AddCallback(ModCallbacks.MC_POST_PICKUP_UPDATE, MegaBombFix, PickupVariant.PICKUP_COIN)
+LOVESICK:AddCallback(ModCallbacks.MC_POST_PICKUP_UPDATE, MegaBombFix, PickupVariant.PICKUP_BOMB)
+
+

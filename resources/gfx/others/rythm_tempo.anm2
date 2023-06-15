@@ -1,5 +1,5 @@
 <AnimatedActor>
-	<Info CreatedBy="Unknown" CreatedOn="01/05/2023 21:02:31" Version="2" Fps="20"/>
+	<Info CreatedBy="Unknown" CreatedOn="26/05/2023 21:12:51" Version="4" Fps="20"/>
 	<Content>
 		<Spritesheets>
 			<Spritesheet Path="rythm_tempo.png" Id="0"/>
@@ -10,7 +10,11 @@
 			<Layer Name="" Id="2" SpritesheetId="0"/>
 		</Layers>
 		<Nulls/>
-		<Events/>
+		<Events>
+			<Event Name="Perfect" Id="0"/>
+			<Event Name="Normal" Id="1"/>
+			<Event Name="Start" Id="2"/>
+		</Events>
 	</Content>
 	<Animations DefaultAnimation="Easy">
 		<Animation Name="Easy" FrameNum="12" Loop="false">
@@ -39,7 +43,12 @@
 				</LayerAnimation>
 			</LayerAnimations>
 			<NullAnimations/>
-			<Triggers/>
+			<Triggers>
+				<Trigger EventId="2" AtFrame="0"/>
+				<Trigger EventId="1" AtFrame="7"/>
+				<Trigger EventId="1" AtFrame="8"/>
+				<Trigger EventId="0" AtFrame="9"/>
+			</Triggers>
 		</Animation>
 	</Animations>
 </AnimatedActor>
