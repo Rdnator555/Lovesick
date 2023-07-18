@@ -143,6 +143,8 @@
         "CustomGameOver",
         "Encyclopedia",
         "DetailedRespawn",
-        "MinimapAPI"
+        "MinimapAPI",
+        "en_us",
+        "ModConfigMenu"
     ]
 }

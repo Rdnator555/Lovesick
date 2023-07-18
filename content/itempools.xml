@@ -4,21 +4,18 @@
         <Item Name="Box of Leftovers" Weight="1" DecreaseBy="1" RemoveOn="0.1" />
         <Item Name="Birthday Cake" Weight="1" DecreaseBy="1" RemoveOn="0.1" />
         <Item Name="Neck Gaiter" Weight="1" DecreaseBy="1" RemoveOn="0.1" />
-        <Item Name="Snowball's Treat" Weight="1" DecreaseBy="1" RemoveOn="0.1" />
     </Pool>
     <Pool Name="greedTreasure">
         <Item Name="Love Letter" Weight="0.5" DecreaseBy="0.5" RemoveOn="0.05" />
         <Item Name="Box of Leftovers" Weight="1" DecreaseBy="1" RemoveOn="0.1" />
         <Item Name="Birthday Cake" Weight="1" DecreaseBy="1" RemoveOn="0.1" />
         <Item Name="Neck Gaiter" Weight="1" DecreaseBy="1" RemoveOn="0.1" />
-        <Item Name="Snowball's Treat" Weight="1" DecreaseBy="1" RemoveOn="0.1" />
     </Pool>
     <Pool Name="boss">
         <Item Name="Box of Leftovers" Weight="0.5" DecreaseBy="0.5" RemoveOn="0.05" />
         <Item Name="Painting Kit" Weight="1" DecreaseBy="1" RemoveOn="0.1" />
         <Item Name="Birthday Cake" Weight="1" DecreaseBy="1" RemoveOn="0.1" />
         <Item Name="Neck Gaiter" Weight="1" DecreaseBy="1" RemoveOn="0.1" />
-        <Item Name="Snowball's Treat" Weight="1" DecreaseBy="1" RemoveOn="0.1" />
     </Pool>
     <Pool Name="devil">
         <Item Name="Arrest Warrant" Weight="1" DecreaseBy="0.5" RemoveOn="0.1"/>
@@ -57,14 +54,12 @@
     <Pool Name="goldenChest">
         <Item Name="Birthday Cake" Weight="1" DecreaseBy="1" RemoveOn="0.1" />
         <Item Name="Box of Leftovers" Weight="1" DecreaseBy="1" RemoveOn="0.1" />
-        <Item Name="Snowball's Treat" Weight="1" DecreaseBy="1" RemoveOn="0.1" />
     </Pool>
     <Pool Name="redChest">
         <Item Name="Neck Gaiter" Weight="1" DecreaseBy="1" RemoveOn="0.1" />
     </Pool>
     <Pool Name="beggar">
         <Item Name="Birthday Cake" Weight="1" DecreaseBy="0.5" RemoveOn="0.1"/>
-        <Item Name="Snowball's Treat" Weight="1" DecreaseBy="0.5" RemoveOn="0.1"/>
     </Pool>
     <Pool Name="demonBeggar">
         <Item Name="Neck Gaiter" Weight="1" DecreaseBy="0.5" RemoveOn="0.1"/>

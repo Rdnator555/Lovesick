@@ -1,0 +1,1331 @@
+local mod = RegisterMod("Lovesick",1)
+local game = Game()
+local sfxManager = SFXManager()
+local monitor = Sprite()
+local curTime = 0
+local newFPS = 0
+local oldFPS = 0
+local FPS 
+local Secs
+local oldSecs
+local Rick =
+{
+    Range = 50,
+    ShotSpeed = 0.2,
+    Speed = 0.2,
+    Damage = -2.2,
+    Luck = 0.7,
+    Firedelay = 1,
+
+
+}
+
+
+
+
+-- MAKE SURE TO REPLACE ALL INSTANCES OF "LOVESICK" WITH YOUR ACTUAL MOD REFERENCE
+-- Made by Slugcat. Report any issues to her.
+-- All credit to her, thanks for such is an awesome tool! --Rdnator55Dev
+
+
+local json = require("json")
+local dataCache = {}
+local dataCacheBackup = {}
+local shouldRestoreOnUse = false
+local loadedData = false
+local inRunButNotLoaded = true
+
+local skipNextRoomClear = false
+local skipNextLevelClear = false
+
+---@class SaveData
+---@field run RunSave @Data that is reset when the run ends. Using glowing hourglass restores data to the last backup.
+---@field hourglassBackup table @The data that is restored when using glowing hourglass. Don't touch this.
+---@field file FileSave @Data that is persistent between runs.
+
+---@class RunSave
+---@field persistent table @Things in this table will not be reset until the run ends.
+---@field level table @Things in this table will not be reset until the level is changed.
+---@field room table @Things in this table will not be reset until the room is changed.
+
+---@class FileSave
+---@field achievements table @Achievement related data.
+---@field dss table @Dead Sea Scrolls related data.
+---@field settings table @Setting related data.
+---@field misc table @Miscellaneous stuff, you likely won't need to use this.
+
+-- If you want to store default data, you must put it in this table.
+---@return SaveData
+function LOVESICK.DefaultSave()
+    return {
+        ---@type RunSave
+        run = {
+            persistent = {},
+            level = {},
+            room = {},
+        },
+        ---@type RunSave
+        hourglassBackup = {
+            persistent = {},
+            level = {},
+            room = {},
+        },
+        
+        file = {
+            achievements = {
+                Faith = {
+                    Isaac = false,
+                    BlueBaby =  false,
+                    Satan =  false,
+                    TheLamb =  false,
+                    BossRush =  false,
+                    Hush =  false,
+                    MegaSatan =  false,
+                    Delirium =  false,
+                    Mother =  false,
+                    Beast =  false,
+                    Greed =  false,
+                    Greedier =  false,
+                },
+                Fault = {
+                    Isaac = false,
+                    BlueBaby =  false,
+                    Satan =  false,
+                    TheLamb =  false,
+                    BossRush =  false,
+                    Hush =  false,
+                    MegaSatan =  false,
+                    Delirium =  false,
+                    Mother =  false,
+                    Beast =  false,
+                    Greed =  false,
+                    Greedier =  false,
+                },
+                Fate = {
+                    Isaac = false,
+                    BlueBaby =  false,
+                    Satan =  false,
+                    TheLamb =  false,
+                    BossRush =  false,
+                    Hush =  false,
+                    MegaSatan =  false,
+                    Delirium =  false,
+                    Mother =  false,
+                    Beast =  false,
+                    Greed =  false,
+                    Greedier =  false,
+                },
+                Fortune = {
+                    Isaac = false,
+                    BlueBaby =  false,
+                    Satan =  false,
+                    TheLamb =  false,
+                    BossRush =  false,
+                    Hush =  false,
+                    MegaSatan =  false,
+                    Delirium =  false,
+                    Mother =  false,
+                    Beast =  false,
+                    Greed =  false,
+                    Greedier =  false,
+                },
+                MissFortune = {
+                    Isaac = false,
+                    BlueBaby =  false,
+                    Satan =  false,
+                    TheLamb =  false,
+                    BossRush =  false,
+                    Hush =  false,
+                    MegaSatan =  false,
+                    Delirium =  false,
+                    Mother =  false,
+                    Beast =  false,
+                    Greed =  false,
+                    Greedier =  false,
+                },
+                Karma = {
+                    Isaac = false,
+                    BlueBaby =  false,
+                    Satan =  false,
+                    TheLamb =  false,
+                    BossRush =  false,
+                    Hush =  false,
+                    MegaSatan =  false,
+                    Delirium =  false,
+                    Mother =  false,
+                    Beast =  false,
+                    Greed =  false,
+                    Greedier =  false,
+                }
+            },
+            dss = {}, -- Dead Sea Scrolls supremacy
+            settings = {
+                bpmTime = 0,
+                bpmBool = true,
+                IsBatterySynergyNerfed= true,
+            },
+            misc = {},
+        },
+    }
+end
+
+---@return RunSave
+function LOVESICK.DefaultRunSave()
+    return {
+        persistent = {},
+        level = {},
+        room = {},
+    }
+end
+
+function LOVESICK.DeepCopy(tab)
+    local copy = {}
+    for k, v in pairs(tab) do
+        if type(v) == 'table' then
+            copy[k] = LOVESICK.DeepCopy(v)
+        else
+            copy[k] = v
+        end
+    end
+    return copy
+end
+
+---@return boolean
+function LOVESICK.IsDataLoaded()
+    return loadedData
+end
+
+function LOVESICK.PatchSaveTable(deposit, source)
+    source = source or LOVESICK.DefaultSave()
+
+    for i, v in pairs(source) do
+        if deposit[i] ~= nil then
+            if type(v) == "table" then
+                if type(deposit[i]) ~= "table" then
+                    deposit[i] = {}
+                end
+
+                deposit[i] = LOVESICK.PatchSaveTable(deposit[i], v)
+            else
+                deposit[i] = v
+            end
+        else
+            if type(v) == "table" then
+                if type(deposit[i]) ~= "table" then
+                    deposit[i] = {}
+                end
+
+                deposit[i] = LOVESICK.PatchSaveTable({}, v)
+            else
+                deposit[i] = v
+            end
+        end
+    end
+    return deposit
+end
+
+function LOVESICK.SaveModData()
+    if not loadedData then
+        return
+    end
+    print("SaveModData")
+    -- Save backup
+    local backupData = LOVESICK.DeepCopy(dataCacheBackup)
+    dataCache.hourglassBackup = LOVESICK.PatchSaveTable(backupData, LOVESICK.DefaultRunSave())
+
+    local finalData = LOVESICK.DeepCopy(dataCache)
+    finalData = LOVESICK.PatchSaveTable(finalData, LOVESICK.DefaultSave())
+
+    LOVESICK:SaveData(json.encode(finalData))
+end
+
+function LOVESICK.RestoreModData()
+    if shouldRestoreOnUse then
+        skipNextRoomClear = true
+        local newData = LOVESICK.DeepCopy(dataCacheBackup)
+        dataCache.run = LOVESICK.PatchSaveTable(newData, LOVESICK.DefaultRunSave())
+        dataCache.hourglassBackup = LOVESICK.PatchSaveTable(newData, LOVESICK.DefaultRunSave())
+    end
+end
+
+function LOVESICK.LoadModData()
+    if loadedData then
+        return
+    end
+    print("LoadModData")
+    local saveData = LOVESICK.DefaultSave()
+
+    if LOVESICK:HasData() then
+        local data = json.decode(LOVESICK:LoadData())
+        saveData = LOVESICK.PatchSaveTable(data, LOVESICK.DefaultSave())
+    end
+
+    dataCache = saveData
+    dataCacheBackup = dataCache.hourglassBackup
+    loadedData = true
+    inRunButNotLoaded = false
+end
+
+---@return table?
+function LOVESICK.GetRunPersistentSave()
+    if not loadedData then
+        return
+    end
+
+    return dataCache.run.persistent
+end
+
+---@return table?
+function LOVESICK.GetLevelSave()
+    if not loadedData then
+        return
+    end
+
+    return dataCache.run.level
+end
+
+---@return table?
+function LOVESICK.GetRoomSave()
+    if not loadedData then
+        return
+    end
+
+    return dataCache.run.room
+end
+
+---@return table?
+function LOVESICK.GetFileSave()
+    if not loadedData then
+        return
+    end
+
+    return dataCache.file
+end
+
+local function ResetRunSave()
+    dataCache.run = LOVESICK.DefaultRunSave()
+    dataCache.hourglassBackup = LOVESICK.DefaultRunSave()
+    dataCacheBackup = LOVESICK.DefaultRunSave()
+
+    LOVESICK.SaveModData()
+end
+
+LOVESICK:AddCallback(ModCallbacks.MC_USE_ITEM, LOVESICK.RestoreModData, CollectibleType.COLLECTIBLE_GLOWING_HOUR_GLASS)
+
+LOVESICK:AddCallback(ModCallbacks.MC_POST_PLAYER_INIT, function()
+    local newGame = Game():GetFrameCount() == 0
+
+    skipNextLevelClear = true
+    skipNextRoomClear = true
+
+    LOVESICK.LoadModData()
+
+    if newGame then
+        ResetRunSave()
+        shouldRestoreOnUse = false
+    end
+end)
+
+LOVESICK:AddCallback(ModCallbacks.MC_POST_UPDATE, function ()
+    local game = Game()
+    if game:GetFrameCount() > 0 then
+        if not loadedData and inRunButNotLoaded then
+            LOVESICK.LoadModData()
+            inRunButNotLoaded = false
+            shouldRestoreOnUse = true
+        end
+    end
+end)
+
+--- Replace YOUR_MOD_NAME with the name of your mod, as defined in RegisterMod!
+--- This handles the "luamod" command!
+LOVESICK:AddCallback(ModCallbacks.MC_PRE_MOD_UNLOAD, function(_, mod)
+    if mod == LOVESICK and Isaac.GetPlayer() ~= nil then
+        if loadedData then
+            LOVESICK.SaveModData()
+        end
+    end
+end)
+
+LOVESICK:AddCallback(ModCallbacks.MC_POST_NEW_ROOM, function()
+    if not skipNextRoomClear then
+        dataCacheBackup.persistent = LOVESICK.DeepCopy(dataCache.run.persistent)
+        dataCacheBackup.room = LOVESICK.DeepCopy(dataCache.run.room)
+        dataCache.run.room = LOVESICK.DeepCopy(LOVESICK.DefaultRunSave().room)
+        LOVESICK.SaveModData()
+        shouldRestoreOnUse = true
+    end
+
+    skipNextRoomClear = false
+end)
+
+LOVESICK:AddCallback(ModCallbacks.MC_POST_NEW_LEVEL, function()
+    if not skipNextLevelClear then
+        dataCacheBackup.persistent = LOVESICK.DeepCopy(dataCache.run.persistent)
+        dataCacheBackup.level = LOVESICK.DeepCopy(dataCache.run.level)
+        dataCache.run.level = LOVESICK.DeepCopy(LOVESICK.DefaultRunSave().level)
+        LOVESICK.SaveModData()
+        shouldRestoreOnUse = true
+    end
+
+    skipNextLevelClear = false
+end)
+
+LOVESICK:AddCallback(ModCallbacks.MC_PRE_GAME_EXIT, function(_, shouldSave)
+    LOVESICK.SaveModData()
+    loadedData = false
+    inRunButNotLoaded = false
+    shouldRestoreOnUse = false
+end)
+
+if ModConfigMenu then 
+    local Luvsick = "Lovesick (Early Version)"
+    ModConfigMenu.UpdateCategory(Luvsick, {Info = {"WIP mod with end game content yet to release",}})
+    --Title
+    ModConfigMenu.AddText(Luvsick, "Settings", function() return "Change display parameters" end)        
+    ModConfigMenu.AddText(Luvsick, "Credits", function() return "Credits" end)
+    ModConfigMenu.AddSpace(Luvsick, "Settings","Credits")
+    -- Settings
+    ModConfigMenu.AddSetting(Luvsick, "Settings", { --BPM diplay and time
+        Type = ModConfigMenu.OptionType.BOOLEAN,
+        CurrentSetting = function()
+            return dataCache.file.settings.bpmTime
+        end,
+        Display = function()
+            return "BPM Time: $scroll" .. dataCache.file.settings.bpmTime
+        end,
+        OnChange = function(n)
+            dataCache.file.settings.bpmTime = n
+            --LOVESICK:SaveModData()
+        end,
+        Info = function()
+            local Value = dataCache.file.settings.bpmTime
+            local TotalText = "BPM number will show for " .. Value .. " seconds"
+            return TotalText
+        end
+    })
+end
+
+
+local RickValues =
+{
+    StressMax = {120,120,120,120},
+    Stress = {0,0,0,0},
+    ShowPulseTime = {0,0,0,0},
+    CalmDelay = {0,0,0,0},
+    LockShield = {},
+    Preload = false,
+    IsRick = {nil,nil,nil,nil}
+}
+
+local function onStart(_,bool)
+    
+    --monitor.Scale = Vector(0.8, 0.8)
+    if bool == false then
+        for p=0, game:GetNumPlayers()-1 do
+            player= Isaac.GetPlayer(p)
+            if player:GetPlayerType() == Isaac.GetPlayerTypeByName("Rick") and not player:HasCollectible(CollectibleType.COLLECTIBLE_GLAUCOMA,true) then
+                player:AddBoneHearts(1)
+                player:AddHearts(2)
+                player:AddSoulHearts(2) 
+                print("adding cache")player:AddTrinket(TrinketType.TRINKET_CROW_HEART, false)
+                player:UseActiveItem(CollectibleType.COLLECTIBLE_SMELTER, false, false, true, false, -1, 0)           
+                local RickHair = Isaac.GetCostumeIdByPath("gfx/characters/character_rick_hair.anm2")
+                player:AddNullCostume(RickHair)
+                RickValues.StressMax.Type = table
+                RickValues.StressMax[p] = 120
+                RickValues.Stress.Type = table
+                RickValues.Stress[p] = 60
+                RickValues.ShowPulseTime.Type = table
+                RickValues.ShowPulseTime[p] = 5
+                RickValues.CalmDelay.Type = table
+                RickValues.CalmDelay[p] = 5
+                RickValues.LockShield.Type = table
+                RickValues.LockShield[p] = 0
+                RickValues.IsRick.type = table
+                RickValues.IsRick[p] = true
+                --print(RickValues.LockShield[p])
+                if RickValues.Preload == false then
+                    Preload()
+                end
+                player:SetPocketActiveItem(Isaac.GetItemIdByName("Locked Heart"), SLOT_POCKET, false)
+                addItem(CollectibleType.COLLECTIBLE_GLAUCOMA, false, true, player)   
+                player:AddCacheFlags(CacheFlag.CACHE_DAMAGE | CacheFlag.CACHE_FIREDELAY | CacheFlag.CACHE_SHOTSPEED | CacheFlag.CACHE_RANGE | CacheFlag.CACHE_SPEED | CacheFlag.CACHE_LUCK)
+                player:EvaluateItems() -- The "MC_EVALUATE_CACHE" callback will now fire.
+            end 
+        end
+    end
+end
+mod:AddCallback(ModCallbacks.MC_POST_GAME_STARTED, onStart)
+
+function Preload()
+    --print(RickValues.Preload)
+    if RickValues.Preload == false then
+        RickValues.Preload = true
+        print("preload")
+        for p=0, game:GetNumPlayers()-1 do
+            player= Isaac.GetPlayer(p)
+            if player:GetPlayerType() == Isaac.GetPlayerTypeByName("Rick") and not player:HasCollectible(CollectibleType.COLLECTIBLE_GLAUCOMA,true) then
+                player:AddBoneHearts(1)
+                player:AddHearts(2)
+                player:AddSoulHearts(2) 
+                print("adding cache")player:AddTrinket(TrinketType.TRINKET_CROW_HEART, false)
+                player:UseActiveItem(CollectibleType.COLLECTIBLE_SMELTER, false, false, true, false, -1, 0)           
+                local RickHair = Isaac.GetCostumeIdByPath("gfx/characters/character_rick_hair.anm2")
+                player:AddNullCostume(RickHair)
+                RickValues.StressMax.Type = table
+                RickValues.StressMax[p] = 120
+                RickValues.Stress.Type = table
+                RickValues.Stress[p] = 60
+                RickValues.ShowPulseTime.Type = table
+                RickValues.ShowPulseTime[p] = 5
+                RickValues.CalmDelay.Type = table
+                RickValues.CalmDelay[p] = 5
+                RickValues.LockShield.Type = table
+                RickValues.LockShield[p] = 0
+                RickValues.IsRick.type = table
+                RickValues.IsRick[p] = true
+                --print(RickValues.LockShield[p])
+                if RickValues.Preload == false then
+                    Preload()
+                end
+                player:SetPocketActiveItem(Isaac.GetItemIdByName("Locked Heart"), SLOT_POCKET, false)
+                addItem(CollectibleType.COLLECTIBLE_GLAUCOMA, false, true, player)   
+                player:AddCacheFlags(CacheFlag.CACHE_DAMAGE | CacheFlag.CACHE_FIREDELAY | CacheFlag.CACHE_SHOTSPEED | CacheFlag.CACHE_RANGE | CacheFlag.CACHE_SPEED | CacheFlag.CACHE_LUCK)
+                player:EvaluateItems() -- The "MC_EVALUATE_CACHE" callback will now fire.
+            end 
+        end
+        monitor:Load("gfx/others/heartbeatsprite.anm2", true)
+        monitor:Play("Normal", true)
+    end
+end
+
+function unNil()
+    for p=0, game:GetNumPlayers()-1 do
+        --print("unNil", p)
+        player= Isaac.GetPlayer(p)
+        if player:GetPlayerType() == Isaac.GetPlayerTypeByName("Rick") then
+            if RickValues.StressMax[p] == nil then RickValues.StressMax[p] = 120 end
+            if RickValues.Stress[p] == nil then RickValues.Stress[p] = 60 end
+            if RickValues.ShowPulseTime[p] == nil then RickValues.ShowPulseTime[p] = 5 end
+            if RickValues.CalmDelay[p] == nil then RickValues.CalmDelay[p] = 5 end
+            if RickValues.LockShield[p] == nil then RickValues.LockShield[p] = 0 end
+            if RickValues.IsRick[p] == nil then RickValues.IsRick[p] = true end
+            --print(p,RickValues.StressMax[p],RickValues.Stress[p],RickValues.ShowPulseTime[p],RickValues.CalmDelay[p],RickValues.LockShield[p],RickValues.IsRick[p])
+        end
+    end
+end
+    
+
+function addItem(item, costume, new, player)
+    player:AddCollectible(item, 0, new, 0, 0)
+    if costume == false then
+        local itemConfig = Isaac.GetItemConfig()
+        local itemConfigItem = itemConfig:GetCollectible(item)
+        player:RemoveCostume(itemConfigItem)
+
+    end
+end
+
+function mod:onCache(player, cache)
+    local hasParent
+        if player.Parent == nil then
+            hasParent = false
+        else
+            hasParent = true
+        end
+        if hasParent then Preload() return nil
+        elseif (player:GetPlayerType() == Isaac.GetPlayerTypeByName("Rick")) and(hasParent == false) then
+            --print(player:GetPlayerType().." "..player.ControllerIndex.." ".." ",hasParent," "..player.Damage)
+            if (player.Damage and cache & CacheFlag.CACHE_DAMAGE == CacheFlag.CACHE_DAMAGE) then
+                player.Damage = player.Damage + Rick.Damage
+                --print("Damage")
+            end        
+            if (player.MaxFireDelay and cache & CacheFlag.CACHE_FIREDELAY == CacheFlag.CACHE_FIREDELAY) then
+                player.MaxFireDelay = player.MaxFireDelay - Rick.Firedelay
+                --print("Tears")
+            end
+            if cache == CacheFlag.CACHE_SHOTSPEED  then
+                player.ShotSpeed = player.ShotSpeed + Rick.ShotSpeed
+            end
+            if (player.Shotspeed and cache & CacheFlag.CACHE_SHOTSPEED == CacheFlag.CACHE_SHOTSPEED) then
+                player.ShotSpeed = player.ShotSpeed + Rick.Shotspeed
+                --print("ShotSpeed")
+            end        
+            if (player.TearRange and cache & CacheFlag.CACHE_RANGE == CacheFlag.CACHE_RANGE) then
+                player.TearRange = player.TearRange + Rick.Range
+                --print("Range")
+            end
+            if (player.MoveSpeed and cache & CacheFlag.CACHE_SPEED == CacheFlag.CACHE_SPEED) then
+                player.MoveSpeed = player.MoveSpeed + Rick.Speed
+                --print("Speed")
+            end        
+            if (player.Luck and cache & CacheFlag.CACHE_LUCK == CacheFlag.CACHE_LUCK) then
+                player.Luck = player.Luck + Rick.Luck
+                --print("Luck")
+            end
+            if (player.TearFlags and cache & CacheFlag.CACHE_TEARFLAG == CacheFlag.CACHE_TEARFLAG) then
+                player.TearFlags = player.TearFlags | TearFlags.RICK_TEAR
+                --print("Luck")
+            end
+        end
+end
+
+mod:AddCallback(ModCallbacks.MC_EVALUATE_CACHE, mod.onCache,player, CacheFlag)
+
+function Timer(p)
+    for p=0, game:GetNumPlayers()-1 do
+        local timerplayer= Isaac.GetPlayer(p)
+        curTime = Game():GetFrameCount()
+            if RickValues.Stress[p] == nil then RickValues.Stress[p] = 60 end
+            FPS = 30/(RickValues.Stress[p]/3)
+            newFPS= math.floor(curTime/FPS)
+            HeartBeat()
+            Secs= math.floor(curTime/30)
+            if timerplayer:GetPlayerType() == Isaac.GetPlayerTypeByName("Rick") and Secs ~= oldSecs then
+                --print(timerplayer:GetPlayerType(),RickValues.Stress[p],p,RickValues.StressMax[p],player.Luck, player:GetPlayerType())
+
+            end
+
+            if Secs ~= oldSecs then
+                unNil()
+                --print(RickValues.Stress[p],p,RickValues.StressMax[p],player.Luck, player:GetPlayerType())
+                --print(RickValues.CalmDelay[p], RickValues.Stress[p])
+                oldSecs = Secs
+                if RickValues.ShowPulseTime[p] > 0 then
+                    RickValues.ShowPulseTime[p] = RickValues.ShowPulseTime[p] - 1
+                end
+                if RickValues.CalmDelay[p] > 0 and RickValues.LockShield[p] == 0 then
+                    RickValues.CalmDelay[p] = RickValues.CalmDelay[p] -1
+                elseif RickValues.LockShield[p] == 0 then
+                    if RickValues.Stress[p] > RickValues.StressMax[p]/2 then
+                        if (RickValues.Stress[p] - player.Luck) < RickValues.StressMax[p]/2 then 
+                            RickValues.Stress[p] = RickValues.StressMax[p]/2
+                            print("1")
+                        else RickValues.Stress[p] = RickValues.Stress[p] - player.Luck 
+                            print("2")
+                        end                        
+                    else
+                        if (RickValues.Stress[p] + player.Luck) > RickValues.StressMax[p]/2 then 
+                            RickValues.Stress[p] = RickValues.StressMax[p]/2
+                            print("3")
+                        else RickValues.Stress[p] = RickValues.Stress[p] + player.Luck
+                            print("4",p, timerplayer.Type, timerplayer.Luck, player.Luck)
+                        end
+                    end
+                end
+             
+        end      
+    end    
+    Preload()
+end
+
+mod:AddCallback(ModCallbacks.MC_POST_PEFFECT_UPDATE, Timer)
+
+function HeartbeatVisibility(player)
+    for p=0, game:GetNumPlayers()-1 do
+        player= Isaac.GetPlayer(p)
+        if Input.IsActionPressed(ButtonAction.ACTION_DROP, player.ControllerIndex)  then
+            RickValues.ShowPulseTime[p] = 5 
+        end
+    end
+end
+
+mod:AddCallback(ModCallbacks.MC_POST_PLAYER_UPDATE, HeartbeatVisibility)
+
+function HeartBeat()
+    for p=0, game:GetNumPlayers()-1 do
+    player= Isaac.GetPlayer(p)
+        if player:GetPlayerType() == Isaac.GetPlayerTypeByName("Rick")  then
+            if monitor:IsFinished("Normal") or monitor:IsFinished("Low Stress") or monitor:IsFinished("Mid Stress") or monitor:IsFinished("Lowest Pulse") or monitor:IsFinished("High Stress") or monitor:IsFinished("Low Pulse") then
+                if RickValues.Stress[p] >= 100 then
+                    monitor:Play("High Stress", true)
+                    sfxManager:Play(SoundEffect.SOUND_HEARTBEAT_FASTER, 2, 1, false, 1)
+                elseif RickValues.Stress[p] >=80 then
+                    monitor:Play("Mid Stress", true) 
+                    sfxManager:Play(SoundEffect.SOUND_HEARTBEAT_FASTER, 1.5, 0, false, 1)
+                elseif RickValues.Stress[p] >=60 then
+                    monitor:Play("Low Stress", true)               
+                    sfxManager:Play(SoundEffect.SOUND_HEARTBEAT_FASTER, 1, 0, false, 1)
+
+                elseif RickValues.Stress[p] >=40 then
+                    monitor:Play("Normal", true)
+                    sfxManager:Play(SoundEffect.SOUND_HEARTBEAT, 0.7, 0, false, 1)
+
+                elseif RickValues.Stress[p] >=20 then
+                    monitor:Play("Low Pulse", true) 
+                    sfxManager:Play(SoundEffect.SOUND_HEARTBEAT, 0.5, 0, false, 1)
+
+                else
+                    monitor:Play("Lowest Pulse", true)
+                    sfxManager:Play(SoundEffect.SOUND_HEARTBEAT, 0.3, 0, false, 1)
+
+                end
+            end
+        end
+    end
+end
+
+function AfterTear()
+    --HeartBeat()
+    --print(FPS)
+    for p=0, game:GetNumPlayers()-1 do
+        local player= Isaac.GetPlayer(p)
+        if player:GetPlayerType() == Isaac.GetPlayerTypeByName("Rick") then
+           if RickValues.Stress[p] < RickValues.StressMax[p] then
+                RickValues.Stress[p] = RickValues.Stress[p] +  player.Damage/4
+                if RickValues.Stress[p] > RickValues.StressMax[p] then
+                    RickValues.Stress[p] = RickValues.StressMax[p]
+                end
+            end
+        end
+    end
+end
+--mod:AddCallback(ModCallbacks.MC_POST_FIRE_TEAR, AfterTear)
+
+
+
+function mod:EntityHit( Entity, Amount, DamageFlags, Source, CountdownFrames)
+    if Entity.Type == 1 then 
+        for p=0, game:GetNumPlayers()-1 do
+        if player:GetPlayerType() == Isaac.GetPlayerTypeByName("Rick") then
+            if player.ControllerIndex == Isaac.GetPlayer(p).ControllerIndex then
+                local stressDMG = math.max(0,math.floor(RickValues.Stress[p]-60)/15)
+                if player:HasCollectible(Isaac.GetItemIdByName("Locked Heart"), true) then
+                    local charge=player:GetActiveCharge(ActiveSlot.SLOT_POCKET)
+                    --print(RickValues.LockShield[p], Amount, charge-stressDMG,stressDMG)
+                    if RickValues.LockShield[p] - Amount >= 0 then
+                        player:SetMinDamageCooldown(30)
+                        RickValues.LockShield[p] = RickValues.LockShield[p] -Amount
+                        RickValues.CalmDelay[p] = math.max(RickValues.CalmDelay[p],2)
+                        return false
+                    else
+                        if charge-stressDMG >= 0 then
+                            player:SetActiveCharge(charge-stressDMG, ActiveSlot.SLOT_POCKET)
+                        else
+                            --print("no reduction dmg")
+                            stressDMG = stressDMG - charge - RickValues.LockShield[p]
+                            player:SetActiveCharge(0, ActiveSlot.SLOT_POCKET)
+                            if Entity.Type ~= Source.Type and stressDMG >0 then
+                                Entity:TakeDamage(stressDMG, DamageFlag.DAMAGE_NO_PENALTIES, EntityRef(Entity), 0)
+                            end
+                        end
+                        RickValues.Stress[p] = RickValues.Stress[p] - math.max(math.floor((RickValues.Stress[p]*0.0)),15)
+                            print(RickValues.Stress[p])
+                            if RickValues.Stress[p] <= 0 then
+                                Entity:Die()
+                            end
+                    end
+                    RickValues.CalmDelay[p] = math.max(RickValues.CalmDelay[p],12)
+                end
+            end
+        else
+            local hasMoreShield = -1
+            local Shield = 0
+            for p=0, game:GetNumPlayers()-1 do
+                if Shield < RickValues.LockShield[p] then 
+                    Shield = RickValues.LockShield[p]
+                    hasMoreShield = p
+                end
+            end
+            if hasMoreShield >= 0 and RickValues.LockShield[hasMoreShield] - Amount > 0 then
+                if RickValues.LockShield[hasMoreShield] - Amount > 0 then
+                    RickValues.LockShield[hasMoreShield] = RickValues.LockShield[hasMoreShield] -Amount
+                    RickValues.CalmDelay[hasMoreShield] = math.max(RickValues.CalmDelay[hasMoreShield],2)
+                    return false
+                else
+                    return true
+                end
+            end
+        end    
+        end    
+    elseif Entity.Type == Source.Type then
+        --print("Karma")
+    else
+        --print(Entity.Type, Source.Type)       
+    local playerParent = Source.Entity:ToPlayer()    
+    local enemy = Entity:ToNPC()
+    for p=0, game:GetNumPlayers()-1 do
+        
+        --print(Source.Type)
+        if Source.Type==2 and Source.Entity and Source.Entity.Parent and Source.Entity.Parent.Type==1 then 
+            player=Source.Entity.Parent:ToPlayer() 
+        end
+        if Source.Type==1 and Source.Entity and Source.Entity.Parent and Source.Entity.Parent.Type==1 then 
+            player=Source.Entity.Parent:ToPlayer() 
+        end
+        if player.ControllerIndex == Isaac.GetPlayer(p).ControllerIndex then
+        if player:GetPlayerType() == Isaac.GetPlayerTypeByName("Rick") then
+        --print("Rick")
+            if Entity:IsVulnerableEnemy() then
+                local pierceDMG = (math.floor(10+((RickValues.Stress[p]-RickValues.StressMax[p]/2)/6)))/10
+                local stressDMG = (math.floor(RickValues.Stress[p]/6)/1000) * (Entity.MaxHitPoints - Entity.HitPoints)
+                if Source.Type == 2 then
+                    --print("pierce")
+                    Entity:TakeDamage((Amount * pierceDMG) + stressDMG, DamageFlag.DAMAGE_IGNORE_ARMOR, EntityRef(Entity), 0)
+                 
+                else
+                    Entity:TakeDamage((Amount * pierceDMG/2) + stressDMG/4, DamageFlag.DAMAGE_IGNORE_ARMOR, EntityRef(Entity), 0)
+                 
+                    --:TakeDamage(Damage, Flags, Source, DamageCountdown)
+                --Entity:TakeDamage(stressDMG, DamageFlag.DAMAGE_IGNORE_ARMOR, EntityType.ENTITY_NULL, 0)
+                
+                --Entity.HitPoints = Entity.HitPoints - (Amount * pierceDMG) - stressDMG
+                --print(Entity.MaxHitPoints, Entity.HitPoints, Amount, pierceDMG, stressDMG)
+            end
+            if Source.Type == 2 and RickValues.LockShield[p] == 0 then
+                if RickValues.Stress[p] < RickValues.StressMax[p] then
+                    RickValues.Stress[p] = RickValues.Stress[p] +  player.Damage/4
+                    if RickValues.Stress[p] > RickValues.StressMax[p] then
+                        RickValues.Stress[p] = RickValues.StressMax[p]
+                    end
+                end
+            elseif Source.Type == 1 and RickValues.LockShield[p] == 0 then
+                if RickValues.Stress[p] < RickValues.StressMax[p] then
+                    RickValues.Stress[p] = RickValues.Stress[p] +  player.Damage/5
+                    if RickValues.Stress[p] > RickValues.StressMax[p] then
+                        RickValues.Stress[p] = RickValues.StressMax[p]
+                    end
+                end
+            end
+            RickValues.CalmDelay[p] = 5
+        end
+        end
+        end             
+    end
+    end
+end
+
+mod:AddCallback(ModCallbacks.MC_ENTITY_TAKE_DMG, mod.EntityHit)
+
+function mod:LockedHeartUse()
+    if player:GetNumKeys() > 0 then
+        --print("LockedUse")
+        --player:AddKeys(-1) 
+        for p=0, game:GetNumPlayers()-1 do
+            if player.ControllerIndex == Isaac.GetPlayer(p).ControllerIndex and player.Parent == nil then
+                local charge=player:GetActiveCharge(ActiveSlot.SLOT_POCKET)
+                RickValues.LockShield[p] = charge
+                sfxManager:Play(SoundEffect.SOUND_GOLDENKEY, 2.5, 0, false, 1)
+                --print(RickValues.LockShield[p])
+                RickValues.CalmDelay[p] = 5
+            end
+        end
+    else
+        local charge=player:GetActiveCharge(ActiveSlot.SLOT_POCKET)
+        --print(charge)
+        player:SetActiveCharge(30, ActiveSlot.SLOT_POCKET)
+        charge=player:GetActiveCharge(ActiveSlot.SLOT_POCKET)
+        --print(charge)
+    end
+end
+
+mod:AddCallback(ModCallbacks.MC_USE_ITEM, mod.LockedHeartUse, Isaac.GetItemIdByName("Locked Heart"))
+
+
+function mod:Stress(player, StressMax)
+    for p=0, game:GetNumPlayers()-1 do
+        player= Isaac.GetPlayer(p)
+        if player:GetPlayerType() == Isaac.GetPlayerTypeByName("Rick") and player.Parent == nil then
+            --print(player.ControllerIndex, p, player.Parent)
+            if RickValues.IsRick[p] ~= true then
+                Preload()
+            end
+            if RickValues.LockShield[p] == nil then RickValues.LockShield[p] = 0 end
+            if RickValues.ShowPulseTime[p] == nil then RickValues.ShowPulseTime[p] = 5 end
+            --print(RickValues.StressMax[p], RickValues.Stress[p])
+            local renderPos = Isaac.WorldToScreen(player.Position)   
+            --Isaac.RenderText(tostring(math.floor(RickValues.Stress[p])),renderPos.X-8,renderPos.Y+8, 0 ,1 ,0 ,0.8)
+            if RickValues.LockShield[p]> 0 then 
+                Isaac.RenderText(tostring(math.floor(RickValues.Stress[p])),renderPos.X-16,renderPos.Y+8, 0 ,1 ,0 ,0.8)
+                Isaac.RenderText(tostring(math.floor(RickValues.LockShield[p])),renderPos.X+4,renderPos.Y+8, 0 , 0 ,0.5 ,0.8)
+            elseif Input.IsActionPressed(ButtonAction.ACTION_DROP, player.ControllerIndex)  then
+                Isaac.RenderText(tostring(math.floor(RickValues.Stress[p])),renderPos.X-7,renderPos.Y+8, 0 ,1 ,0 ,0.8)
+            end
+            -- Execute this function every POST_RENDER. For example in the MC_POST_RENDER callback.
+            if RickValues.Preload == false then
+                monitor:Reload()
+            end
+            if newFPS ~= oldFPS then
+                oldFPS = newFPS
+                --print(newFPS ,oldFPS)
+                monitor:Update()
+                if player:HasCollectible(Isaac.GetItemIdByName("Locked Heart"), true) and RickValues.CalmDelay[p] == 0 then
+                    --print("HeartLocked")
+                    local charge=player:GetActiveCharge(ActiveSlot.SLOT_POCKET)
+                    if charge < 15 then
+                        player:SetActiveCharge(charge+1, ActiveSlot.SLOT_POCKET)
+                    end
+                end
+            end
+            if RickValues.ShowPulseTime[p] > 0 then
+                monitor:Render(Vector(renderPos.X,renderPos.Y + 9 ), Vector(0,0), Vector(0,0))
+            end 
+        end
+    end
+end
+mod:AddCallback(ModCallbacks.MC_POST_RENDER, mod.Stress) --MC_POST_UPDATE 
+
+
+
+local mod = RegisterMod("Lovesick",1)
+local game = Game()
+local sfxManager = SFXManager()
+local monitor = Sprite()
+local curTime = 0
+local Secs
+local oldSecs
+local Rick =
+{
+    Range = 50,
+    ShotSpeed = 0.2,
+    Speed = 0.2,
+    Damage = -2.2,
+    Luck = 0.7,
+    Firedelay = 1,
+
+
+}
+local RickValues =
+{
+    StressMax = {},
+    Stress = {},
+    ShowPulseTime = {},
+    CalmDelay = {},
+    LockShield = {},
+    Preload = false,
+    IsRick = {},
+    newFPS = {},
+    oldFPS = {},
+    FPS = {},
+}
+
+local function onStart(_,bool)   
+    for p=0, game:GetNumPlayers()-1 do
+            local player= Isaac.GetPlayer(p)
+            if bool == false then
+            if player:GetPlayerType() == Isaac.GetPlayerTypeByName("Rick") and not player:HasCollectible(CollectibleType.COLLECTIBLE_GLAUCOMA,true) then
+                RickSetup(p)
+            end
+            player:AddCacheFlags(CacheFlag.CACHE_DAMAGE | CacheFlag.CACHE_FIREDELAY | CacheFlag.CACHE_SHOTSPEED | CacheFlag.CACHE_RANGE | CacheFlag.CACHE_SPEED | CacheFlag.CACHE_LUCK)
+            player:EvaluateItems() -- The "MC_EVALUATE_CACHE" callback will now fire.
+            updateCache(player)
+        end
+    end
+end
+mod:AddCallback(ModCallbacks.MC_POST_GAME_STARTED, onStart)
+
+function updateCache(playerToUpdate)
+    local player
+    --print("Update the cache of ", playerToUpdate.ControllerIndex,playerToUpdate:GetPlayerType())
+    for p=0, game:GetNumPlayers()-1 do
+        local player= Isaac.GetPlayer(p)
+        local number = p
+        --print(playerToUpdate.Position,player.Position)
+        if player.Position.X==playerToUpdate.Position.X and player.Position.Y==playerToUpdate.Position.Y then 
+            print("Player n: ",number) 
+            player= Isaac.GetPlayer(number)    
+            playerToUpdate:AddCacheFlags(CacheFlag.CACHE_DAMAGE)
+            playerToUpdate:EvaluateItems() -- The "MC_EVALUATE_CACHE" callback will now fire.
+            print(number,RickValues.StressMax[number],RickValues.Stress[number],RickValues.ShowPulseTime[number],RickValues.CalmDelay[number],RickValues.LockShield[number],RickValues.IsRick[number])
+        end
+    end
+end
+
+function RickSetup(rickplayer)
+    local player= Isaac.GetPlayer(rickplayer)
+    player:AddBoneHearts(1)
+    player:AddHearts(2)
+    player:AddSoulHearts(2) 
+    --print("adding cache for",rickplayer)player:AddTrinket(TrinketType.TRINKET_CROW_HEART, false)
+    player:UseActiveItem(CollectibleType.COLLECTIBLE_SMELTER, false, false, true, false, -1, 0)           
+    local RickHair = Isaac.GetCostumeIdByPath("gfx/characters/character_rick_hair.anm2")
+    player:AddNullCostume(RickHair)
+    RickValues.StressMax.Type = table
+    RickValues.StressMax[rickplayer] = 120
+    RickValues.Stress.Type = table
+    RickValues.Stress[rickplayer] = 60
+    RickValues.ShowPulseTime.Type = table
+    RickValues.ShowPulseTime[rickplayer] = 5
+    RickValues.CalmDelay.Type = table
+    RickValues.CalmDelay[rickplayer] = 5
+    RickValues.LockShield.Type = table
+    RickValues.LockShield[rickplayer] = 0
+    RickValues.IsRick.type = table
+    RickValues.IsRick[rickplayer] = true
+    RickValues.FPS.type = table
+    RickValues.FPS[rickplayer] = nil
+    RickValues.oldFPS.type = table
+    RickValues.oldFPS[rickplayer] = nil
+    RickValues.newFPS.type = table
+    RickValues.newFPS[rickplayer] = nil
+    --print(RickValues.StressMax[rickplayer],RickValues.Stress[rickplayer],RickValues.ShowPulseTime[rickplayer],RickValues.CalmDelay[rickplayer],RickValues.LockShield[rickplayer],RickValues.IsRick[rickplayer])
+    player:SetPocketActiveItem(Isaac.GetItemIdByName("Locked Heart"), SLOT_POCKET, false)
+    addItem(CollectibleType.COLLECTIBLE_GLAUCOMA, false, true, player)
+end
+
+
+function unNil()
+    for p=0, game:GetNumPlayers()-1 do
+        local player = Isaac.GetPlayer(p)
+            if player:GetPlayerType() == Isaac.GetPlayerTypeByName("Rick") then
+                if RickValues.StressMax[p] == nil then RickValues.StressMax[p] = 120 end
+                if RickValues.Stress[p] == nil then print("unNil", p) RickValues.Stress[p] = 60 end
+                if RickValues.ShowPulseTime[p] == nil then print("unNil", p) RickValues.ShowPulseTime[p] = 5 end
+                if RickValues.CalmDelay[p] == nil then print("unNil", p) RickValues.CalmDelay[p] = 5 end
+                if RickValues.LockShield[p] == nil then print("unNil", p) RickValues.LockShield[p] = 0 end
+                if RickValues.IsRick[p] == nil then print("unNil", p) RickValues.IsRick[p] = true end
+                updateCache(player)
+            --print(p,RickValues.StressMax[p],RickValues.Stress[p],RickValues.ShowPulseTime[p],RickValues.CalmDelay[p],RickValues.LockShield[p],RickValues.IsRick[p])
+        end
+    end
+end
+    
+
+function addItem(item, costume, new, player)
+    player:AddCollectible(item, 0, new, 0, 0)
+    if costume == false then
+        local itemConfig = Isaac.GetItemConfig()
+        local itemConfigItem = itemConfig:GetCollectible(item)
+        player:RemoveCostume(itemConfigItem)
+
+    end
+end
+
+function mod:onCache(player, cache)
+    print("cachecalling")
+end
+
+mod:AddCallback(ModCallbacks.MC_EVALUATE_CACHE, mod.onCache,player, cache)
+
+function Timer()
+    unNil()
+    curTime = Game():GetFrameCount()
+    Secs= math.floor(curTime/30)
+    for p=0, game:GetNumPlayers()-1 do
+        FPS = 30/(RickValues.Stress[p]/3)
+        newFPS= math.floor(curTime/FPS) 
+        if player:GetPlayerType() == Isaac.GetPlayerTypeByName("Rick") then
+            if Secs ~= oldSecs then
+                local player= Isaac.GetPlayer(p)
+                HeartBeat()
+                --print(player.Position,p,RickValues.CalmDelay[p]) 
+                --print(p)
+                oldSecs = Secs
+                if RickValues.ShowPulseTime[p] > 0 then
+                    RickValues.ShowPulseTime[p] = RickValues.ShowPulseTime[p] - 1
+                end
+                if RickValues.CalmDelay[p] > 0 and RickValues.LockShield[p] == 0 then
+                    RickValues.CalmDelay[p] = RickValues.CalmDelay[p] -1
+                elseif RickValues.LockShield[p] == 0 then
+                    if RickValues.Stress[p] > RickValues.StressMax[p]/2 then
+                        if (RickValues.Stress[p] - player.Luck) < RickValues.StressMax[p]/2 then 
+                            RickValues.Stress[p] = RickValues.StressMax[p]/2
+                            print("1")
+                        else RickValues.Stress[p] = RickValues.Stress[p] - player.Luck 
+                            print("2")
+                        end                        
+                    else
+                        if (RickValues.Stress[p] + player.Luck) > RickValues.StressMax[p]/2 then 
+                            RickValues.Stress[p] = RickValues.StressMax[p]/2
+                            print("3")
+                        else RickValues.Stress[p] = RickValues.Stress[p] + player.Luck
+                            print("4",p, player.Position, player.Luck)
+                        end
+                    end
+                end
+            end
+        end        
+    end
+    
+    
+       
+    --Preload()
+end
+
+mod:AddCallback(ModCallbacks.MC_POST_UPDATE, Timer)
+
+function HeartbeatVisibility(player)
+    for p=0, game:GetNumPlayers()-1 do
+        local player= Isaac.GetPlayer(p)
+        if Input.IsActionPressed(ButtonAction.ACTION_DROP, player.ControllerIndex)  then
+            RickValues.ShowPulseTime[p] = 5 
+        end
+    end
+end
+
+mod:AddCallback(ModCallbacks.MC_POST_PLAYER_UPDATE, HeartbeatVisibility)
+
+function HeartBeat()
+    for p=0, game:GetNumPlayers()-1 do
+    local player= Isaac.GetPlayer(p)
+        if player:GetPlayerType() == Isaac.GetPlayerTypeByName("Rick")  then
+            if monitor:IsFinished("Normal") or monitor:IsFinished("Low Stress") or monitor:IsFinished("Mid Stress") or monitor:IsFinished("Lowest Pulse") or monitor:IsFinished("High Stress") or monitor:IsFinished("Low Pulse") then
+                if RickValues.Stress[p] >= 100 then
+                    monitor:Play("High Stress", true)
+                    sfxManager:Play(SoundEffect.SOUND_HEARTBEAT_FASTER, 2, 1, false, 1)
+                elseif RickValues.Stress[p] >=80 then
+                    monitor:Play("Mid Stress", true) 
+                    sfxManager:Play(SoundEffect.SOUND_HEARTBEAT_FASTER, 1.5, 0, false, 1)
+                elseif RickValues.Stress[p] >=60 then
+                    monitor:Play("Low Stress", true)               
+                    sfxManager:Play(SoundEffect.SOUND_HEARTBEAT_FASTER, 1, 0, false, 1)
+
+                elseif RickValues.Stress[p] >=40 then
+                    monitor:Play("Normal", true)
+                    sfxManager:Play(SoundEffect.SOUND_HEARTBEAT, 0.7, 0, false, 1)
+
+                elseif RickValues.Stress[p] >=20 then
+                    monitor:Play("Low Pulse", true) 
+                    sfxManager:Play(SoundEffect.SOUND_HEARTBEAT, 0.5, 0, false, 1)
+
+                else
+                    monitor:Play("Lowest Pulse", true)
+                    sfxManager:Play(SoundEffect.SOUND_HEARTBEAT, 0.3, 0, false, 1)
+
+                end
+            end
+        end
+    end
+end
+
+function AfterTear()
+    --HeartBeat()
+    --print(FPS)
+    for p=0, game:GetNumPlayers()-1 do
+        local player= Isaac.GetPlayer(p)
+        if player:GetPlayerType() == Isaac.GetPlayerTypeByName("Rick") then
+           if RickValues.Stress[p] < RickValues.StressMax[p] then
+                RickValues.Stress[p] = RickValues.Stress[p] +  player.Damage/4
+                if RickValues.Stress[p] > RickValues.StressMax[p] then
+                    RickValues.Stress[p] = RickValues.StressMax[p]
+                end
+            end
+        end
+    end
+end
+--mod:AddCallback(ModCallbacks.MC_POST_FIRE_TEAR, AfterTear)
+
+
+
+function mod:EntityHit( Entity, Amount, DamageFlags, Source, CountdownFrames)
+    if Entity.Type == 1 then 
+        for p=0, game:GetNumPlayers()-1 do
+            local player = Isaac.GetPlayer(p)
+        if player:GetPlayerType() == Isaac.GetPlayerTypeByName("Rick") then
+            if player.ControllerIndex == Isaac.GetPlayer(p).ControllerIndex then
+                local stressDMG = math.max(0,math.floor(RickValues.Stress[p]-60)/15)
+                if player:HasCollectible(Isaac.GetItemIdByName("Locked Heart"), true) then
+                    local charge=player:GetActiveCharge(ActiveSlot.SLOT_POCKET)
+                    --print(RickValues.LockShield[p], Amount, charge-stressDMG,stressDMG)
+                    if RickValues.LockShield[p] - Amount >= 0 then
+                        player:SetMinDamageCooldown(30)
+                        RickValues.LockShield[p] = RickValues.LockShield[p] -Amount
+                        RickValues.CalmDelay[p] = math.max(RickValues.CalmDelay[p],2)
+                        return false
+                    else
+                        if charge-stressDMG >= 0 then
+                            player:SetActiveCharge(charge-stressDMG, ActiveSlot.SLOT_POCKET)
+                        else
+                            --print("no reduction dmg")
+                            stressDMG = stressDMG - charge - RickValues.LockShield[p]
+                            player:SetActiveCharge(0, ActiveSlot.SLOT_POCKET)
+                            if Entity.Type ~= Source.Type and stressDMG >0 then
+                                Entity:TakeDamage(stressDMG, DamageFlag.DAMAGE_NO_PENALTIES, EntityRef(Entity), 0)
+                            end
+                        end
+                        RickValues.Stress[p] = RickValues.Stress[p] - math.max(math.floor((RickValues.Stress[p]*0.0)),15)
+                            print(RickValues.Stress[p])
+                            if RickValues.Stress[p] <= 0 then
+                                Entity:Die()
+                            end
+                    end
+                    RickValues.CalmDelay[p] = math.max(RickValues.CalmDelay[p],12)
+                end
+            end
+        else
+            local hasMoreShield = -1
+            local Shield = 0
+            for p=0, game:GetNumPlayers()-1 do
+                if Shield < RickValues.LockShield[p] then 
+                    Shield = RickValues.LockShield[p]
+                    hasMoreShield = p
+                end
+            end
+            if hasMoreShield >= 0 and RickValues.LockShield[hasMoreShield] - Amount > 0 then
+                if RickValues.LockShield[hasMoreShield] - Amount > 0 then
+                    RickValues.LockShield[hasMoreShield] = RickValues.LockShield[hasMoreShield] -Amount
+                    RickValues.CalmDelay[hasMoreShield] = math.max(RickValues.CalmDelay[hasMoreShield],2)
+                    return false
+                else
+                    return true
+                end
+            end
+        end    
+        end    
+    elseif Entity.Type == Source.Type then
+        --print("Karma")
+    else
+        --print(Entity.Type, Source.Type)       
+    local playerParent = Source.Entity:ToPlayer()    
+    local enemy = Entity:ToNPC()
+    for p=0, game:GetNumPlayers()-1 do
+        
+        --print(Source.Type)
+        if Source.Type==2 and Source.Entity and Source.Entity.Parent and Source.Entity.Parent.Type==1 then 
+            player=Source.Entity.Parent:ToPlayer() 
+        end
+        if Source.Type==1 and Source.Entity and Source.Entity.Parent and Source.Entity.Parent.Type==1 then 
+            player=Source.Entity.Parent:ToPlayer() 
+        end
+        if player.ControllerIndex == Isaac.GetPlayer(p).ControllerIndex then
+        if player:GetPlayerType() == Isaac.GetPlayerTypeByName("Rick") then
+        --print("Rick")
+            if Entity:IsVulnerableEnemy() then
+                local pierceDMG = (math.floor(10+((RickValues.Stress[p]-RickValues.StressMax[p]/2)/6)))/10
+                local stressDMG = (math.floor(RickValues.Stress[p]/6)/1000) * (Entity.MaxHitPoints - Entity.HitPoints)
+                if Source.Type == 2 then
+                    --print("pierce")
+                    Entity:TakeDamage((Amount * pierceDMG) + stressDMG, DamageFlag.DAMAGE_IGNORE_ARMOR, EntityRef(Entity), 0)
+                 
+                else
+                    Entity:TakeDamage((Amount * pierceDMG/2) + stressDMG/4, DamageFlag.DAMAGE_IGNORE_ARMOR, EntityRef(Entity), 0)
+                 
+                    --:TakeDamage(Damage, Flags, Source, DamageCountdown)
+                --Entity:TakeDamage(stressDMG, DamageFlag.DAMAGE_IGNORE_ARMOR, EntityType.ENTITY_NULL, 0)
+                
+                --Entity.HitPoints = Entity.HitPoints - (Amount * pierceDMG) - stressDMG
+                --print(Entity.MaxHitPoints, Entity.HitPoints, Amount, pierceDMG, stressDMG)
+            end
+            if Source.Type == 2 and RickValues.LockShield[p] == 0 then
+                if RickValues.Stress[p] < RickValues.StressMax[p] then
+                    RickValues.Stress[p] = RickValues.Stress[p] +  player.Damage/4
+                    if RickValues.Stress[p] > RickValues.StressMax[p] then
+                        RickValues.Stress[p] = RickValues.StressMax[p]
+                    end
+                end
+            elseif Source.Type == 1 and RickValues.LockShield[p] == 0 then
+                if RickValues.Stress[p] < RickValues.StressMax[p] then
+                    RickValues.Stress[p] = RickValues.Stress[p] +  player.Damage/5
+                    if RickValues.Stress[p] > RickValues.StressMax[p] then
+                        RickValues.Stress[p] = RickValues.StressMax[p]
+                    end
+                end
+            end
+            RickValues.CalmDelay[p] = 5
+        end
+        end
+        end             
+    end
+    end
+end
+
+mod:AddCallback(ModCallbacks.MC_ENTITY_TAKE_DMG, mod.EntityHit)
+
+function mod:LockedHeartUse()
+    if player:GetNumKeys() > 0 then
+        --print("LockedUse")
+        --player:AddKeys(-1) 
+        for p=0, game:GetNumPlayers()-1 do
+            if player.ControllerIndex == Isaac.GetPlayer(p).ControllerIndex and player.Parent == nil then
+                local charge=player:GetActiveCharge(ActiveSlot.SLOT_POCKET)
+                RickValues.LockShield[p] = charge
+                sfxManager:Play(SoundEffect.SOUND_GOLDENKEY, 2.5, 0, false, 1)
+                --print(RickValues.LockShield[p])
+                RickValues.CalmDelay[p] = 5
+            end
+        end
+    else
+        local charge=player:GetActiveCharge(ActiveSlot.SLOT_POCKET)
+        --print(charge)
+        player:SetActiveCharge(30, ActiveSlot.SLOT_POCKET)
+        charge=player:GetActiveCharge(ActiveSlot.SLOT_POCKET)
+        --print(charge)
+    end
+end
+
+mod:AddCallback(ModCallbacks.MC_USE_ITEM, mod.LockedHeartUse, Isaac.GetItemIdByName("Locked Heart"))
+
+
+function mod:Stress(player, StressMax)
+    for p=0, game:GetNumPlayers()-1 do
+        player= Isaac.GetPlayer(p)
+        if player:GetPlayerType() == Isaac.GetPlayerTypeByName("Rick") and player.Parent == nil then
+            --print(player.ControllerIndex, p, player.Parent)
+            if RickValues.IsRick[p] ~= true then
+                Preload()
+            end
+            if RickValues.LockShield[p] == nil then RickValues.LockShield[p] = 0 end
+            if RickValues.ShowPulseTime[p] == nil then RickValues.ShowPulseTime[p] = 5 end
+            --print(RickValues.StressMax[p], RickValues.Stress[p])
+            local renderPos = Isaac.WorldToScreen(player.Position)   
+            --Isaac.RenderText(tostring(math.floor(RickValues.Stress[p])),renderPos.X-8,renderPos.Y+8, 0 ,1 ,0 ,0.8)
+            if RickValues.LockShield[p]> 0 then 
+                Isaac.RenderText(tostring(math.floor(RickValues.Stress[p])),renderPos.X-16,renderPos.Y+8, 0 ,1 ,0 ,0.8)
+                Isaac.RenderText(tostring(math.floor(RickValues.LockShield[p])),renderPos.X+4,renderPos.Y+8, 0 , 0 ,0.5 ,0.8)
+            elseif Input.IsActionPressed(ButtonAction.ACTION_DROP, player.ControllerIndex)  then
+                Isaac.RenderText(tostring(math.floor(RickValues.Stress[p])),renderPos.X-7,renderPos.Y+8, 0 ,1 ,0 ,0.8)
+            end
+            -- Execute this function every POST_RENDER. For example in the MC_POST_RENDER callback.
+            if RickValues.Preload == false then
+                monitor:Reload()
+            end
+            if newFPS ~= oldFPS then
+                oldFPS = newFPS
+                --print(newFPS ,oldFPS)
+                monitor:Update()
+                if player:HasCollectible(Isaac.GetItemIdByName("Locked Heart"), true) and RickValues.CalmDelay[p] == 0 then
+                    --print("HeartLocked")
+                    local charge=player:GetActiveCharge(ActiveSlot.SLOT_POCKET)
+                    if charge < 15 then
+                        player:SetActiveCharge(charge+1, ActiveSlot.SLOT_POCKET)
+                    end
+                end
+            end
+            if RickValues.ShowPulseTime[p] > 0 then
+                monitor:Render(Vector(renderPos.X,renderPos.Y + 9 ), Vector(0,0), Vector(0,0))
+            end 
+        end
+    end
+end
+mod:AddCallback(ModCallbacks.MC_POST_RENDER, mod.Stress) --MC_POST_UPDATE 
+
+if StageAPI == nil then
+    print("Need StageAPI to work!")
+else
+    --StageAPI.AddPlayerGraphicsInfo(rickId, {
+    --    Portrait = "gfx/ui/stage/playerportrait_rick.png",
+    --    Name = "gfx/ui/boss/playername_rick.png",
+    --    PortraitBig = "gfx/ui/stage/playerportrait_rick.png",
+    --    NoShake = false
+    --})
+    print("works")
+    StageAPI.AddBossData("Dummy",{
+        Name = "Dummy",
+        Portrait = "gfx/ui/boss/playerportrait_rick_b.png"  ,
+        BossName = "gfx/ui/boss/playername_seven_b.png" ,
+        Rooms = StageAPI.RoomsList("PunchBag_1", require("resources.luarooms.reaction"))  ,
+    })
+    print("works2")
+    
+    local LimboBG = StageAPI.BackdropHelper({
+        Walls = {"1", "2", "3"}, -- you can add more, or remove some
+        NFloors = {"nfloor"},
+        LFloors = {"lfloor"},
+        Corners = {"corner"}
+    }, "gfx/floors/Limbo/Limbo", ".png") -- the first one path to the graphics, as well as the beginning of the filename.
+    local LimboGrid = StageAPI.GridGfx()
+    --Music.factorySong = Isaac.GetMusicIdByName("floorsecret")
+    LimboGrid:SetRocks("gfx/grid/rocks_basement.png")
+    local LimboGFX = StageAPI.RoomGfx(LimboBG, LimboGrid, "_default", "stageapi/shading/shading")
+    local LimboFloor = StageAPI.CustomStage("Limbo") -- finally defining the floor.
+    LimboFloor:SetRoomGfx(LimboGFX, {RoomType.ROOM_DEFAULT, RoomType.ROOM_TREASURE, RoomType.ROOM_MINIBOSS, RoomType.ROOM_BOSS}) 
+    LimboFloor:SetStageMusic(Music.MUSIC_CATHEDRAL, {RoomType.ROOM_DEFAULT, RoomType.ROOM_TREASURE, RoomType.ROOM_MINIBOSS, RoomType.ROOM_BOSS}) 
+    LimboFloor:SetBossMusic(Music.MUSIC_CATHEDRAL, Music.MUSIC_BOSS_OVER)
+    LimboFloor:SetReplace(StageAPI.StageOverride.NecropolisTwo) -- the annoying part. we'll get to that later.
+    LimboFloor:SetSpots("gfx/floors/Limbo/bossspot_Limbo.png", "gfx/floors/Limbo/playerspot_Limbo.png")
+    LimboFloor:SetRooms(StageAPI.RoomsList("Limbo_rooms", include("resources.luarooms.stuckhome_thomas"))) -- we'll get to this later!
+    LimboFloor:SetBosses({"Dummy"}) -- we'll get to this later!
+
+end
+
