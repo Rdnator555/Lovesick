@@ -1,5 +1,13 @@
 
 <sounds root="sounds/">
+    <sound name="Squeak">
+        <sample weight="1" path="squeak.wav" />
+    </sound>
+    <sound name="NotDefinedYet">
+        <sample weight="1" path="sound_effect_variation_1.wav"/>
+        <sample weight="1" path="sound_effect_variation_2.wav"/>
+        <sample weight="1" path="sound_effect_variation_3.wav"/>
+    </sound>
     <sound name="Shield_Up">
         <sample weight="1" path="Faithfull_Shield_Up.wav" />
     </sound>

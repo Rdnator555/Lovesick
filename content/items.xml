@@ -1,24 +1,43 @@
 <items gfxroot="gfx/items/" version="1" deathanm2="gfx/death items.anm2">
-  <!--Trinkets-->
-  <trinket id="1" name="Paper Rose" description="A gift of dedication"  gfx="001_paper_rose.png" cache="luck damage" />
-  <trinket id="2" name="Big Fuse" description="Size matters!"  gfx="002_big_fuse.png" cache="" />
   <!--Actives-->
   <active id="1" name="Locked Heart" description="Under lock and key" gfx="001_locked_heart.png" maxcharges="15" chargetype="special" quality="3" persistent="True" hidden="true" craftquality="-1" />
   <active id="5" name="Morphine" description="I will feel nothing" gfx="005_morphine.png" maxcharges="0" quality="4" devilprice="2" />
   <active id="3" name="Love Letter" description="I put my heart on this" gfx="003_love_letter.png" maxcharges="0" quality="2" />
   <active id="6" name="Sleeping Pills" description="I feel drowzi a bisthh..." gfx="006_sleeping_pills.png" quality="3" blackhearts="2"  maxcharges="12" />
-  <active id="13" name="Old MP3" description="Sweet noises" gfx="006_sleeping_pills.png" quality="3" maxcharges="30" chargetype="special" />
-  <active id="14" name=" Old MP3" description="Music rocks!" gfx="006_sleeping_pills.png" quality="3" maxcharges="30" chargetype="special" />
-  <active id="15" name="  Old MP3" description="Classics are eternal" gfx="006_sleeping_pills.png" quality="3" maxcharges="30" chargetype="special" />
-  <active id="16" name="   Old MP3" description="Experimental stuff" gfx="006_sleeping_pills.png" quality="3" maxcharges="30" chargetype="special" />
-  <!--Passives-->
-  <familiar id="10" name="Kind Soul" description="Only a soul but still a friend" gfx="010_kind_soul.png" quality="3" cache="familiars" maxcharges="6"/>
+  <active id="13" name="Loose Thread" description="Stitch with care" gfx="013_loose_thread.png" maxcharges="60" chargetype="timed" quality="3" persistent="True" hidden="false" craftquality="3" />
+  <active id="15" name="Old MP3" description="Sweet noises" gfx="006_sleeping_pills.png" quality="3" maxcharges="30" chargetype="special" />
+  <active id="16" name=" Old MP3" description="Music rocks!" gfx="006_sleeping_pills.png" quality="3" maxcharges="30" chargetype="special" />
+  <active id="17" name="  Old MP3" description="Classics are eternal" gfx="006_sleeping_pills.png" quality="3" maxcharges="30" chargetype="special" />
+  <active id="18" name="   Old MP3" description="Experimental stuff" gfx="006_sleeping_pills.png" quality="3" maxcharges="30" chargetype="special" />
+
   <!--Passives-->
   <passive id="2" name="Painting Kit" description="Continue her legacy..." gfx="002_painting_kit.png" quality="2" cache="firedelay tearflag shotspeed" />
-  <passive id="4" name="Box of Leftovers" description="Knick-knack stuff" gfx="004_box_of_leftovers.png" quality="1" cache="" bombs="1" keys="1" />
+  <passive id="4" name="Box of Leftovers" description="Knick-knack stuff" gfx="004_box_of_leftovers.png" quality="3" cache="" bombs="1" keys="1" />
   <passive id="7" name="Arrest Warrant" description="Claim the bounty before they claim yours" gfx="007_arrest_warrant.png" quality="2" cache="" coins="3" />
   <passive id="8" name="Sunset Clock" description="Let the sun wake you up" gfx="008_sunset_clock.png" quality="3" cache="all" hearts="6" shopprice="15" />
   <passive id="9" name="Birthday Cake" description="Happy birthday to me.." gfx="009_birthday_cake.png" quality="0" cache="" maxhearts="1" hearts="2" />
   <passive id="11" name="Neck Gaiter" description="Show no emotion" gfx="011_neck_gaiter.png" quality="2" cache="damage speed" blackhearts="2" addcostumeonpickup="true" />
   <passive id="12" name="Void Shot" description="Foreshadowing death" gfx="011_neck_gaiter.png" quality="4" cache="" blackhearts="2" />
+  <passive id="14" name="Snowball's Treat" description="Just a little carrot" gfx="014_snowball_treat.png" quality="2" cache="" maxhearts="2" hearts="2" />
+  <passive id="19" name="Snowball" description="Ill put you back together" gfx="019_snowball.png" quality="3" cache="" blackhearts="2" />
+  <passive id="20" name="Sewing Machine" description="Time mends all..." gfx="020_sewing_machine.png" quality="4" maxhearts="4" />
+  <passive id="21" name="Rabbit Foot" description="Luck and guilt" gfx="021_rabbit_foot.png" quality="1" cache="luck speed" />
+  
+  <!--Familiars-->
+  <familiar id="10" name="Kind Soul" description="Only a soul but still a friend" gfx="010_kind_soul.png" quality="3" cache="familiars" maxcharges="6"/>
+ 
+  <!--Trinkets-->
+  <trinket id="1" name="Paper Rose" description="A gift of dedication"  gfx="001_paper_rose.png" cache="luck damage" />
+  <trinket id="2" name="Big Fuse" description="Size matters!"  gfx="002_big_fuse.png" cache="" />
+  <trinket id="3" name="Repent Patch" description="A test at last.."  gfx="debug_patch.png" cache="" />
+  <trinket id="4" name="Rage Patch" description="Coated in blood"  gfx="rage_patch.png" cache="damage" />
+  <trinket id="5" name="Speed Patch" description="Lightweight cloth"  gfx="speed_patch.png" cache="speed" />
+  <trinket id="6" name="Power Patch" description="Elastic and tense"  gfx="velocity_patch.png" cache="shotspeed" />
+  <trinket id="7" name="Aim Patch" description="Rag of a swimswuit"  gfx="aim_patch.png" cache="range" />
+  <trinket id="8" name="Sorrow Patch" description="A blanket shard"  gfx="sorrow_patch.png" cache="firedelay" />
+  <trinket id="9" name="Clover Patch" description="Smells like apples"  gfx="clover_patch.png" cache="luck" />
+  <trinket id="10" name="Cursed Patch" description="Echoes runs through it"  gfx="cursed_patch.png" cache="" />
+  <trinket id="11" name="Blessed Patch" description="Holly pessence"  gfx="blessed_patch.png" cache="" />
+  <trinket id="12" name="Old Drawing" description="Fading memories"  gfx="old_drawing.png" cache="firedelay shotspeed" />
+
 </items>

@@ -3,10 +3,10 @@
 	skin="character_rick.png" skinColor="-1" birthright="Masochism Up" costume="33" costumeSuffix="Rick" />
 	<player hp="4" name="Rick_b" nameimage="playername_rick.png" portrait="playerportrait_rick.png" 
 	skin="character_rick_old.png" skinColor="-1" birthright="Masochism Up" costume="33" costumeSuffix="Rick" bSkinParent="Rick" />
-
+	<player hp="2" keys="1" name="Snowball" nameimage="playername_snowball.png" portrait="playerportrait_snowball.png" 
+	skin="SnowBall_Body_.png" skinColor="-1" birthright="Ragdoll" costume="33" costumeSuffix="Snowball" />
 </players>
-<!--	
-	
+<!--
 	<player hp="2" black="1" bombs="1" name="Rick_b" nameimage="playername_rick.png" portrait="playerportrait_rick.png" skin="character_rick.png" skinColor="-1" bSkinParent="Rick" birthright="This ain't my heart.."/>
 	IMPORTANT:
 	THE BASE GAME DOES NOT USE DIFFERENT CHARACTER NAMES FOR THE TAINTED AND NON-TAINTED VARIANT OF A CHARACTER.
