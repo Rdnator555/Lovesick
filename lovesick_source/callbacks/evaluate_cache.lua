@@ -1,9 +1,11 @@
 local patches = require("lovesick_source.items.patches")
+local LoveLetter = require("lovesick_source.items.love_letter")
 local save = require("lovesick_source.save_manager")
 local utility = require("lovesick_source.utility")
 local enum = require("lovesick_source.enums")
 local function onCache(_,player, cache)
     patches.onCache(player,cache)
+    LoveLetter.onCache(player,cache)
     if player:GetPlayerType()==enum.PlayerType.Snowball then
         utility.SetbaseStats(player,cache,enum.BaseStats.Snowball)
     elseif player:GetPlayerType()==enum.PlayerType.Faithfull then

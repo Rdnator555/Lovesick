@@ -1,5 +1,5 @@
 local mod= RegisterMod("Lovesick",1)
-local Version = "2.AlphaDevKit"
+local Version = "2.0-DevKit"
 LoveSickV2 = mod
 
 local game = Game() local sfxManager = SFXManager() local level = Game():GetLevel() local stage = level:GetStage()

@@ -284,6 +284,8 @@ function save.EditData(newData,typeData)
         dataCache.file.achievements = newData or dataCache.file.achievements
     elseif typeData == "run" then
         dataCache.run = newData or dataCache.run
+    elseif typeData == "persistent" then
+        dataCache.run.persistent = newData or dataCache.run.persistent
     elseif typeData == "RickValues" then
         dataCache.run.persistent.RickValues = newData or dataCache.run.persistent.RickValues
     elseif typeData == "UnlockQueue" then

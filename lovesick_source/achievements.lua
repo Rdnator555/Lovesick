@@ -70,7 +70,7 @@ function achievements.displayQueue()
     end
     if (Game():GetRoom():IsClear() and enemies==0) and achievements.idle_timer <= 0 and unlocks[1] ~= nil and achievement:IsFinished(achievement:GetAnimation()) then
         achievements.obtained_achievement(util.QueueRemove(unlocks))
-        save.EditData(unlocks,"Achievements")
+        save.EditData(unlocks,"UnlockQueue")
     end
 end
 
