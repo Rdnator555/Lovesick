@@ -108,22 +108,23 @@ local stats={
     TearFlags = TearFlags.TEAR_NORMAL
 }
 --]]
-function util.SetbaseStats(player,cache,stats)
+function util.SetStats(player,cache,stats,multiplier)
+    if multiplier == nil then multiplier = 1 end
     --print(player:GetPlayerType().." "..player.ControllerIndex.." ".." ",hasParent," "..player.Damage)
     if (stats.Damage and cache & CacheFlag.CACHE_DAMAGE == CacheFlag.CACHE_DAMAGE) then
-        player.Damage = player.Damage + stats.Damage
+        player.Damage = player.Damage + (stats.Damage*multiplier)
         --print("Damage", player.Damage, getPlayerId(player))
     end        
     if (stats.Firedelay and cache & CacheFlag.CACHE_FIREDELAY == CacheFlag.CACHE_FIREDELAY) then
-        player.MaxFireDelay = util.AddTears(player.MaxFireDelay,stats.Firedelay) 
+        player.MaxFireDelay = util.AddTears(player.MaxFireDelay,(stats.Firedelay*multiplier)) 
        --print("Tears2", player.MaxFireDelay )
     end
     if (stats.ShotSpeed and cache & CacheFlag.CACHE_SHOTSPEED == CacheFlag.CACHE_SHOTSPEED ) then
-        player.ShotSpeed = player.ShotSpeed + stats.ShotSpeed
+        player.ShotSpeed = player.ShotSpeed + (stats.ShotSpeed*multiplier)
         --print("ShotSpeed")
     end 
     if (stats.Range and cache & CacheFlag.CACHE_RANGE == CacheFlag.CACHE_RANGE) then
-        player.TearRange = player.TearRange + stats.Range
+        player.TearRange = player.TearRange + (stats.Range*multiplier)
         --print("Range")
     end
     if (stats.TearFlags and cache & CacheFlag.CACHE_TEARFLAG == CacheFlag.CACHE_TEARFLAG) then
@@ -135,44 +136,12 @@ function util.SetbaseStats(player,cache,stats)
         --print("Flying")
     end
     if (stats.Speed and cache & CacheFlag.CACHE_SPEED == CacheFlag.CACHE_SPEED) then
-        if player.MoveSpeed <=2 then player.MoveSpeed = math.min(2,player.MoveSpeed + stats.Speed)
-        else player.MoveSpeed = player.MoveSpeed + stats.Speed end
+        if player.MoveSpeed <=2 then player.MoveSpeed = math.min(2,player.MoveSpeed + (stats.Speed*multiplier))
+        else player.MoveSpeed = player.MoveSpeed + (stats.Speed*multiplier) end
         --print("Speed")
     end        
     if (stats.Luck and cache & CacheFlag.CACHE_LUCK == CacheFlag.CACHE_LUCK) then
-        player.Luck = player.Luck + stats.Luck
-        --print("Luck")
-    end
-end
-
-function util.DecayDebuffs(player,cache,decay)
-    --print(player:GetPlayerType().." "..player.ControllerIndex.." ".." ",hasParent," "..player.Damage)
-    if (player.Damage and cache & CacheFlag.CACHE_DAMAGE == CacheFlag.CACHE_DAMAGE) then
-        player.Damage = player.Damage * decay
-        --print("Damage", player.Damage, getPlayerId(player))
-    end        
-    if (player.MaxFireDelay and cache & CacheFlag.CACHE_FIREDELAY == CacheFlag.CACHE_FIREDELAY) then
-        --print("Tears1", player.MaxFireDelay )
-        player.MaxFireDelay = util.MultiplyTears(player.MaxFireDelay,decay)
-       --print("Tears2", player.MaxFireDelay )
-    end
-    if cache == CacheFlag.CACHE_SHOTSPEED  then
-        player.ShotSpeed = player.ShotSpeed  * decay
-    end
-    if (player.ShotSpeed and cache & CacheFlag.CACHE_SHOTSPEED == CacheFlag.CACHE_SHOTSPEED) then
-        player.ShotSpeed = player.ShotSpeed  * decay
-        --print("ShotSpeed")
-    end        
-    if (player.TearRange and cache & CacheFlag.CACHE_RANGE == CacheFlag.CACHE_RANGE) then
-        player.TearRange = player.TearRange  * decay
-        --print("Range")
-    end
-    if (player.MoveSpeed and cache & CacheFlag.CACHE_SPEED == CacheFlag.CACHE_SPEED) then
-        player.MoveSpeed = player.MoveSpeed - (1-decay)
-        --print("Speed")
-    end        
-    if (player.Luck and cache & CacheFlag.CACHE_LUCK == CacheFlag.CACHE_LUCK) then
-        player.Luck = player.Luck - ((1-decay)*10)
+        player.Luck = player.Luck + (stats.Luck*multiplier)
         --print("Luck")
     end
 end
@@ -263,4 +232,5 @@ function util.PickupKill(pickup) --from epiphany mod, thanks and all credit to t
     sprite:Play("Collect", true)
     pickup:Remove()
 end
+
 return util

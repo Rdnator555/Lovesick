@@ -161,7 +161,6 @@ function Faithfull.post_render(player)
             Faithfull.heart_beat(player)
             RickValues.OldFPS[p] = RickValues.NewFPS[p]
             Monitor[p]:Update()
-            --if saveData.persistent.MorphineTime[p] == 0 then Shield[p]:Update() end  --For the morphine active Shield sprite display.
         end
     end
     --]] 
@@ -222,15 +221,42 @@ function Faithfull.post_update(player)
     --Faithfull.heart_beat(player)
 end
 
+function Faithfull.morphine_update(player)
+    local p = util.getPlayerIndex(player)
+    saveData = save.GetData()
+    local persistent = saveData.run.persistent
+    local renderPos
+    if Game():GetRoom():IsMirrorWorld() then 
+        renderPos = Vector(480-Isaac.WorldToScreen(player.Position).X,Isaac.WorldToScreen(player.Position).Y) 
+    else
+        renderPos = Isaac.WorldToScreen(player.Position) 
+    end
+    if Shield[p]== nil then
+        Shield[p] = Sprite()
+        Shield[p]:Load("gfx/ui/other/Shield.anm2", true)
+        Shield[p]:Play("6-b", true)
+        --print(p,"Shield",Shield[p])
+    end
+    if persistent.MorphineTime and persistent.MorphineTime[p] > 0 then
+        if achievements.idle_timer <= 0  then 
+            Shield[p]:Render(Vector(renderPos.X,renderPos.Y -24 ), Vector(0,0), Vector(0,0)) 
+    elseif not Game():IsPaused() and Game():GetFrameCount()%10==0 then
+            Shield[p]:Update() 
+        end
+    end
+    Faithfull.shield_sprite_select(player)
+end
+
 function Faithfull.shield_sprite_select(player)
     local p = util.getPlayerIndex(player)
     saveData = save.GetData()
     local RickValues = saveData.run.persistent.RickValues
     local runSave = saveData.run
-    if RickValues and runSave then
+    if runSave then
         if runSave.persistent.MorphineTime == nil then runSave.persistent.MorphineTime = {} end
         if runSave.persistent.MorphineTime[p] == nil then runSave.persistent.MorphineTime[p] = 0 end
         if Shield[p] and Shield[p]:IsFinished(Shield[p]:GetAnimation()) then
+            --print("IsFinished")
             if runSave.persistent.MorphineTime[p] and runSave.persistent.MorphineTime[p] > 0 then
             if runSave.persistent.MorphineTime[p] >= 90 then
                 Shield[p]:Play("90-b", true)
@@ -263,7 +289,7 @@ function Faithfull.shield_sprite_select(player)
             elseif runSave.persistent.MorphineTime[p] > 0 then
                 Shield[p]:Play("6-b", true)
             end
-            elseif player:GetPlayerType() == enums.PlayerType.Faithfull then
+            elseif player:GetPlayerType() == enums.PlayerType.Faithfull and RickValues then
                 if math.ceil(RickValues.LockShield[p]) >=15 then
                     Shield[p]:Play("15", true)
                 elseif math.ceil(RickValues.LockShield[p]) >= 14 then
@@ -434,6 +460,7 @@ function Faithfull.entity_take_dmg(player,Amount,DamageFlags)
     local p = util.getPlayerIndex(player)
     saveData = save.GetData()
     local RickValues = saveData.run.persistent.RickValues
+    if RickValues == nil then return end
     local ShieldPlayerIndex = nil
     local ShieldPlayer = nil
     local ShieldValue = 0

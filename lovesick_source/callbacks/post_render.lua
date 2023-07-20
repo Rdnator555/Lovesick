@@ -17,6 +17,7 @@ local function post_render()
         if player:GetPlayerType()==PlayerType.Faithfull then
             PlayerCode.Faithfull.post_render(player)
         end
+        PlayerCode.Faithfull.morphine_update(player)
     end
 end
 

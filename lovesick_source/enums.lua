@@ -78,9 +78,16 @@ enums.BaseStats = {
     }
 }
 enums.ItemStats = {
-    PaintKit ={
+    PaintingKit ={
         Firedelay = 0.5,
         ShotSpeed = 0.2,
+        TearFlagsRotating = {
+            TearFlags.TEAR_GISH,
+            TearFlags.TEAR_MYSTERIOUS_LIQUID_CREEP,
+            TearFlags.TEAR_TURN_HORIZONTAL,
+            TearFlags.TEAR_BOUNCE,
+            TearFlags.TEAR_HYDROBOUNCE
+        }
     },
     SunsetClock = {
         SleepMultiplier = 0.8,

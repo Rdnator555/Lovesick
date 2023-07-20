@@ -18,13 +18,12 @@ function love_letter.useItem(item, itemRNG, EntityPlayer, useFlags, activeSlot)
     save.EditData(settings,"settings")
     if persistent.LoveLetterShame == nil then persistent.LoveLetterShame = {} end
     if persistent.LoveLetterShame[p] == nil then 
-        persistent.LoveLetterShame[p] = 10
+        persistent.LoveLetterShame[p] = 0
+    end
+    if EntityPlayer:HasCollectible(CollectibleType.COLLECTIBLE_CAR_BATTERY) then
+        persistent.LoveLetterShame[p] = persistent.LoveLetterShame[p] + 15
     else
-        if useFlags & UseFlag.USE_CARBATTERY == UseFlag.USE_CARBATTERY then
-            persistent.LoveLetterShame[p] = persistent.LoveLetterShame[p] + 5
-        else
-            persistent.LoveLetterShame[p] = persistent.LoveLetterShame[p] + 10
-        end
+        persistent.LoveLetterShame[p] = persistent.LoveLetterShame[p] + 10
     end
     save.EditData(persistent,"persistent")
     EntityPlayer:AddCacheFlags(CacheFlag.CACHE_FIREDELAY)

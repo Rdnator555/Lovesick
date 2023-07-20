@@ -9,10 +9,20 @@ local game = Game()
 local function newFloor()
     local saveData = save.GetData()
     local mimics = 15
+    local HasSunsetClock = util.AnyHasCollectible(Item.SunsetClock,true)
+    if HasSunsetClock then
+        local saveData = save.GetData()
+        local run = saveData.run
+        run.level.SunsetClockSleep = 120
+        save.EditData(run,"run")
+    end
     for p=0, game:GetNumPlayers()-1 do 
         local player = Isaac.GetPlayer(p)
         local data = player:GetData()
         local index = util.getPlayerIndex(player)
+        if player:HasCollectible(Item.BoxOfLeftovers) then
+            player:UseActiveItem(CollectibleType.COLLECTIBLE_SMELTER, false, false, true,false,ActiveSlot.SLOT_PRIMARY)    
+        end
         treat.onNewFloor(player)
         if player:GetPlayerType() == PlayerType.Snowball then
             if saveData.hourglassBackup.level.mimikyu and saveData.hourglassBackup.level.mimikyu[index] and saveData.run.level.mimikyu[index].Patches then
