@@ -51,8 +51,17 @@ function postUpdate.MC_POST_UPDATE()
             player:AddCacheFlags(CacheFlag.CACHE_FIREDELAY)
             player:EvaluateItems()
         end
+        
+        if persistent.MorphineDebuff and persistent.MorphineDebuff[p] > 0 and Game():GetFrameCount()%10 == 0 then 
+            persistent.MorphineDebuff[p]=math.max(0,persistent.MorphineDebuff[p]-0.05) 
+            save.EditData(persistent,"persistent") 
+            player:AddCacheFlags(CacheFlag.CACHE_FIREDELAY)
+            player:EvaluateItems()
+        end
         achievements.post_update(player,n)
-        PlayerCode.Faithfull.post_update(player)
+        if player:GetPlayerType() == PlayerType.Faithfull then
+            PlayerCode.Faithfull.post_update(player)
+        end
     end
 end
 

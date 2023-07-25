@@ -162,6 +162,9 @@ function Faithfull.post_render(player)
             RickValues.OldFPS[p] = RickValues.NewFPS[p]
             Monitor[p]:Update()
         end
+        if RickValues.LockShield[p] > 0 then
+            Shield[p]:Update()
+        end
     end
     --]] 
     local r = 0
@@ -215,10 +218,37 @@ end
 
 function Faithfull.post_update(player)
     local p = util.getPlayerIndex(player)
-    if Shield[p] then Shield[p]:Update() end
+    local saveData = save.GetData()
+    local RickValues = saveData.run.persistent.RickValues
     Faithfull.sprite_preload(p)
     Faithfull.shield_sprite_select(player)
-    --Faithfull.heart_beat(player)
+    if RickValues == nil then return end
+    local charge=player:GetActiveCharge(ActiveSlot.SLOT_POCKET)        
+    local subcharge = player:GetBatteryCharge(ActiveSlot.SLOT_POCKET)
+    local fullCharged = player:FullCharge(ActiveSlot.SLOT_POCKET, false)
+    player:SetActiveCharge(charge+subcharge, ActiveSlot.SLOT_POCKET)
+    if player:GetActiveItem(ActiveSlot.SLOT_POCKET) == Item.LockedHeart and player:GetCard(0) == 0 and player:GetPill(0) == 0 
+    and not fullCharged and Input.IsActionTriggered(ButtonAction.ACTION_PILLCARD,player.ControllerIndex) 
+    and player:GetNumKeys() > 0 and (RickValues.AdrenalineDMG == nil or RickValues.AdrenalineDMG[p]<=0) then
+        if RickValues.AdrenalineDMG == nil then RickValues.AdrenalineDMG = {} end
+        local ActiveThreat = 0
+        for _, ent in pairs(Isaac.GetRoomEntities()) do
+            local distance = math.floor(player.Position:Distance(ent.Position))
+            if ent:IsActiveEnemy(false) then
+                if distance < 100 then
+                    ActiveThreat = ActiveThreat +1
+                end
+            elseif ent.Type == EntityType.ENTITY_PROJECTILE then
+                if distance < 100 then
+                    ActiveThreat = ActiveThreat +1
+                end
+            end
+        end
+        RickValues.AdrenalineDMG[p] = RickValues.AdrenalineDMG[p] + ActiveThreat
+        player:AddKeys(-1)
+        save.EditData(RickValues,"RickValues")
+    end
+
 end
 
 function Faithfull.morphine_update(player)
@@ -240,7 +270,8 @@ function Faithfull.morphine_update(player)
     if persistent.MorphineTime and persistent.MorphineTime[p] > 0 then
         if achievements.idle_timer <= 0  then 
             Shield[p]:Render(Vector(renderPos.X,renderPos.Y -24 ), Vector(0,0), Vector(0,0)) 
-    elseif not Game():IsPaused() and Game():GetFrameCount()%10==0 then
+        end
+        if not Game():IsPaused() and Game():GetFrameCount()%10==0 then
             Shield[p]:Update() 
         end
     end
@@ -498,15 +529,13 @@ function Faithfull.entity_take_dmg(player,Amount,DamageFlags)
             end
             RickValues.CalmDelay[ShieldPlayerIndex]=math.max(5,RickValues.CalmDelay[ShieldPlayerIndex])
         end
-        if player:GetPlayerType() == enums.PlayerType.Faithfull and not value == false then
+        if player:GetPlayerType() == enums.PlayerType.Faithfull and (value == nil or value == true) then
             RickValues.Stress[p] = math.max(0,RickValues.Stress[p] - math.max(15,RickValues.Stress[p]*1/3))
             RickValues.CalmDelay[p] = math.max(5,RickValues.CalmDelay[p])
             --RickValues.ShowPulseTime[p] = math.max(saveData.file.settings.TimeBPM,RickValues.ShowPulseTime[p])
             if RickValues.Stress[p]<=0 then player:Die() end
         end
     end
-    --saveData.run.persistent.RickValues = RickValues
-    --save.EditData(saveData)
     save.EditData(RickValues,"RickValues")
     return value
 end
