@@ -142,7 +142,7 @@ function Faithfull.post_render(player)
             end
         end
     end
-    if RickValues and achievements.idle_timer <= 0 then
+    if RickValues  then --and achievements.idle_timer <= 0
         Faithfull.sprite_preload(p)
         if RickValues.ShowPulseTime and RickValues.ShowPulseTime[p]> 0 then 
             Monitor[p]:Render(Vector(renderPos.X,renderPos.Y + 9 ), Vector(0,0), Vector(0,0))
@@ -177,7 +177,7 @@ function Faithfull.post_render(player)
     elseif RickValues.Color[p] == 1 then r=0 g=0.5 b=0.5
     elseif RickValues.Color[p] == 0 then r=0 g=0.25 b=0.75
     else r=0 g=0 b=1 end
-    if (RickValues.ShowPulseTime[p] > 0 or Input.IsActionPressed(ButtonAction.ACTION_DROP, player.ControllerIndex)) and achievements.idle_timer <= 0 then
+    if (RickValues.ShowPulseTime[p] > 0 or Input.IsActionPressed(ButtonAction.ACTION_DROP, player.ControllerIndex))  then   --and achievements.idle_timer <= 0
         if RickValues.LockShield[p]> 0 and (HasSpiderMod or settings.ShieldNumberAlways) then
         else
         end
@@ -188,7 +188,7 @@ function Faithfull.post_render(player)
     if Input.IsActionPressed(ButtonAction.ACTION_DROP, player.ControllerIndex) then 
         RickValues.ShowPulseTime[p] = math.max(RickValues.ShowPulseTime[p],saveData.file.settings.TimeBPM)
     end
-    if --[[not Game():IsPaused() and]] ((RickValues.ShowPulseTime[p] > 0) and achievements.idle_timer <= 0) then
+    if --[[not Game():IsPaused() and]] ((RickValues.ShowPulseTime[p] > 0) ) then    --and achievements.idle_timer <= 0
         if RickValues.LockShield[p]> 0 then
             if HasSpiderMod or (not settings.HideBPM and settings.ShieldNumberAlways) then
                 --print("1")
@@ -268,8 +268,9 @@ function Faithfull.morphine_update(player)
         --print(p,"Shield",Shield[p])
     end
     if persistent.MorphineTime and persistent.MorphineTime[p] > 0 then
+        Shield[p]:Render(Vector(renderPos.X,renderPos.Y -24 ), Vector(0,0), Vector(0,0)) 
         if achievements.idle_timer <= 0  then 
-            Shield[p]:Render(Vector(renderPos.X,renderPos.Y -24 ), Vector(0,0), Vector(0,0)) 
+           
         end
         if not Game():IsPaused() and Game():GetFrameCount()%10==0 then
             Shield[p]:Update() 

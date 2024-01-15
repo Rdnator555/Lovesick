@@ -4,8 +4,8 @@ local save = require("lovesick_source.save_manager")
 local achievements = require("lovesick_source.achievements")
 local PlayerType = enums.PlayerType
 local Fatefull = {}
-local Monitor = {}
-local Shield = {}
+local Sheet = {}
+local Notes = {}
 local saveData
 local oldSecs = {}
 
@@ -140,7 +140,7 @@ function Fatefull.post_render(player)
             end
         end
     end
-    if RickValues and achievements.idle_timer <= 0 then
+    if RickValues  then --and achievements.idle_timer <= 0
         Fatefull.sprite_preload(p)
         if RickValues.ShowPulseTime and RickValues.ShowPulseTime[p]> 0 then 
             Monitor[p]:Render(Vector(renderPos.X,renderPos.Y + 9 ), Vector(0,0), Vector(0,0))
@@ -173,7 +173,7 @@ function Fatefull.post_render(player)
     elseif RickValues.Color[p] == 1 then r=0 g=0.5 b=0.5
     elseif RickValues.Color[p] == 0 then r=0 g=0.25 b=0.75
     else r=0 g=0 b=1 end
-    if (RickValues.ShowPulseTime[p] > 0 or Input.IsActionPressed(ButtonAction.ACTION_DROP, player.ControllerIndex)) and achievements.idle_timer <= 0 then
+    if (RickValues.ShowPulseTime[p] > 0 or Input.IsActionPressed(ButtonAction.ACTION_DROP, player.ControllerIndex))  then   --and achievements.idle_timer <= 0
         if RickValues.LockShield[p]> 0 and (HasSpiderMod or settings.ShieldNumberAlways) then
         else
         end

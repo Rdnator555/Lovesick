@@ -1,0 +1,15 @@
+<achievements gfxroot="gfx/ui/achievement/">
+	<achievement name="Locked Heart Unlock" 	gfx="achievement__lockedheart.png" 		conditiontype="completionmark" conditionvalue="ISAAC" 			conditioncharacter="Rick"/>			
+	<achievement name="Locked Heart Tough Up" 	gfx="achievement__lockedheart2.png" 	conditiontype="completionmark" conditionvalue="BLUE_BABY" 		conditioncharacter="Rick"/>
+	<achievement name="Arrest Warrant Unlock" 	gfx="achievement_arrest_warrant.png" 	conditiontype="completionmark" conditionvalue="BEAST" 			conditioncharacter="Rick"/>
+	<achievement name="Birthday Cake Unlock" 	gfx="achievement_birthday_cake.png" 	conditiontype="completionmark" conditionvalue="MOTHER" 			conditioncharacter="Rick"/>
+	<achievement name="Box of Leftovers Unlock" gfx="achievement_box_of_leftovers.png" 	conditiontype="completionmark" conditionvalue="MEGA_SATAN" 		conditioncharacter="Rick"/>
+	<achievement name="Kind Soul Unlock" 		gfx="achievement_kind_soul.png" 		conditiontype="completionmark" conditionvalue="ULTRA_GREED" 	conditioncharacter="Rick"/>
+	<achievement name="Love Letter Unlock" 		gfx="achievement_love_letter.png" 		conditiontype="completionmark" conditionvalue="ULTRA_GREEDIER" 	conditioncharacter="Rick"/>
+	<achievement name="Morphine Unlock" 		gfx="achievement_morphine.png" 			conditiontype="completionmark" conditionvalue="HUSH" 			conditioncharacter="Rick"/>
+	<achievement name="Neck Gaiter Unlock" 		gfx="achievement_neck_gaiter.png" 		conditiontype="completionmark" conditionvalue="SATAN" 			conditioncharacter="Rick"/>
+	<achievement name="Painting Kit Unlock" 	gfx="achievement_painting_kit.png" 		conditiontype="completionmark" conditionvalue="LAMB" 			conditioncharacter="Rick"/>
+	<achievement name="Paper Rose Unlock"		gfx="achievement_paper_rose.png" 		conditiontype="completionmark" conditionvalue="BOSS_RUSH" 		conditioncharacter="Rick"/>
+	<achievement name="Sleeping Pills Unlock" 	gfx="achievement_sleeping_pills.png" 	conditiontype="completionmark" conditionvalue="ALL" 			conditioncharacter="Rick"/>
+	<achievement name="Sunset Clock Unlock" 	gfx="achievement_sunset_clock.png" 		conditiontype="completionmark" conditionvalue="DELIRIUM" 		conditioncharacter="Rick"/>
+</achievements>

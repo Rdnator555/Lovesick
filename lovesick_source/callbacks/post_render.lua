@@ -9,8 +9,8 @@ local PlayerType = enums.PlayerType
 local render = {}
 
 local function post_render()
-    achievements.render_achievement()
-    achievements.displayQueue()
+    --achievements.render_achievement()
+    --fiedisplayQueue()
     for n=0, Game():GetNumPlayers()-1 do
         local player= Isaac.GetPlayer(n)
         --local p = util.getPlayerIndex(player)

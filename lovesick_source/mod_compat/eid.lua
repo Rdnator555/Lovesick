@@ -22,7 +22,7 @@ function EIDRegistry.register()
 		EID:addCollectible(Isaac.GetItemIdByName("Kind Soul"), "Adds a familiar that has hp and can die. #Can convert a golden chest into a eternal chest once per floor while pressing drop button.", "Kind Soul", en_us)
 		EID:addCollectible(Isaac.GetItemIdByName("Neck Gaiter"), "{{ArrowUp}}Damage Up. #{{ArrowUp}}Speed Up. #Grants a blck heart on pickup. #You are a ninja now.", "Kind Soul", en_us)
 		EID:addCollectible(Isaac.GetItemIdByName("Love Letter"), "{{ArrowUp}}Insane tears up that vanish over time. #{{ArrowUp}}Love Up.", "Love Letter", en_us)
-		EID:addBirthright(Player.Faithfull, "Doubles your max stress cap. #Significantly more dmg output, but also more stress dmg. #Locked heart grants more shield as it scales with max stress. #On low shield, enemies killed with stress drop temporary hearts, use them to charge and trigger heart effects")
+		EID:addBirthright(Player.Rick, "Doubles your max stress cap. #Significantly more dmg output, but also more stress dmg. #Locked heart grants more shield as it scales with max stress. #On low shield, enemies killed with stress drop temporary hearts, use them to charge and trigger heart effects")
 		EID:addTrinket(Isaac.GetTrinketIdByName("Paper Rose"), "{{ArrowDown}}-0.25% DMG Down. #{{ArrowUp}}{{ArrowDown}}Luck-1 * 1.25 and . #Also some dmg turns into luck.", "Paper Rose", en_us)
 end
 	

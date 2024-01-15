@@ -58,7 +58,7 @@ function postUpdate.MC_POST_UPDATE()
             player:AddCacheFlags(CacheFlag.CACHE_FIREDELAY)
             player:EvaluateItems()
         end
-        achievements.post_update(player,n)
+        --achievements.post_update(player,n)
         if player:GetPlayerType() == PlayerType.Faithfull then
             PlayerCode.Faithfull.post_update(player)
         end

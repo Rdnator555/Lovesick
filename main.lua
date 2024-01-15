@@ -1,8 +1,12 @@
 local mod= RegisterMod("Lovesick",1)
 local Version = "2.0-DevKit"
 LoveSickV2 = mod
+local modinit = false
 
-local game = Game() local sfxManager = SFXManager() local level = Game():GetLevel() local stage = level:GetStage()
+
+
+local eid = require("lovesick_source.mod_compat.eid")  --define and import eid file
+local achievements = require("lovesick_source.achievements")
 
 local evaluateCache = require("lovesick_source.callbacks.evaluate_cache")
 local postRender = require("lovesick_source.callbacks.post_render")
@@ -20,11 +24,11 @@ local onNewFloor = require("lovesick_source.callbacks.new_floor")
 local onRoomClear = require("lovesick_source.callbacks.on_room_clear")
 local newGame = require("lovesick_source.callbacks.new_game")
 local save_manager = require("lovesick_source.save_manager")
-local achievements = require("lovesick_source.achievements")
+
 save_manager.mod = mod
 local postGameEnd = require("lovesick_source.callbacks.post_game_end")
-local eid = require("lovesick_source.mod_compat.eid")  --define and import eid file
-local modConfigMenu = require("lovesick_source.mod_compat.modconfigmenu")
+
+
 
 --mod:AddCallback(ModCallbacks.MC_USE_ITEM, useItem)
 mod:AddCallback(ModCallbacks.MC_PRE_SPAWN_CLEAN_AWARD, onRoomClear.MC_PRE_SPAWN_CLEAN_AWARD)
@@ -55,15 +59,13 @@ mod:AddCallback(ModCallbacks.MC_POST_NEW_LEVEL, save_manager.postNewLevel)
 mod:AddCallback(ModCallbacks.MC_PRE_GAME_EXIT, save_manager.preGameExit)
 
 --Unlock Check
-mod:AddCallback(ModCallbacks.MC_POST_PICKUP_RENDER, achievements.IsItemUnlocked)
-
---Mod Compatibility
-eid.register()
-modConfigMenu(RDFIXES~=nil)
 
 
-local util = require("lovesick_source.utility")
-local save = require("lovesick_source.save_manager")
+--local util = require("lovesick_source.utility")
+--local save = require("lovesick_source.save_manager")
+
+require("lovesick_source.mod_compat.imguiSupport")
+
 
 local function onTears()
     local saveData = save.GetData()
@@ -72,36 +74,22 @@ local function onTears()
     --util.QueueStore("gfx/ui/achievement/achievement_Rick_1.png",unlocks)
     --save.EditData(unlocks,"Achievements")
 end
-mod:AddCallback(ModCallbacks.MC_POST_TEAR_INIT, onTears)
+--mod:AddCallback(ModCallbacks.MC_POST_TEAR_INIT, onTears)
 
-function mod:script_path()
-    local str = debug.getinfo(2, "S").source:sub(2)
-    return str:match("(.*[/\\])") or "./"
-end
-local AllUnlock = {
-    true,true,true,true,true,true,true,true,true,true,true
-}
+LoveSickV2.enums = require("lovesick_source.enums")
 
---function mod:ChangeAnm2VisiblilityOfMark(path,name,table)
---    local values = {normal={0,0},deliNormal={0,128},deliHard={0,224}}
---    local layersMarks = {"21","22","23","24","25","26","27","28","29","30","31","32"} --"21", es la bg
---    print(path,name,table)
---    local file = assert(io.open(path,"r"))
---    if not file then return nil end
---    local xml = file:read"*a"
---    file:close()
---    local playerAnimation = xml:match("<Animation Name=\""..name.."\" FrameNum=\"1\" Loop=\"false\">.-</Animation>")
---    local layerAnimations = playerAnimation:match("<LayerAnimations>.-</LayerAnimations>")
---    for p = 1, #layersMarks do
---        local layerP=(layerAnimations:match("<LayerAnimation LayerId=\""..layersMarks[p].."\" Visible=\"true\">.-</LayerAnimation>"))
---        print(layerP)
---    end
---    --local file = assert(io.open("myTest2.xml", "w"))
---    --file:write(xml)
---    --file:close()
---    print(tostring(string.upper):match("-[function]"))
---      
---end
+
+--Mod Compatibility
+eid.register()
+--local modConfigMenu = require("lovesick_source.mod_compat.modconfigmenu")
+--modConfigMenu(RDFIXES~=nil)
+
+
+mod:AddCallback(ModCallbacks.MC_MAIN_MENU_RENDER, function(_) if not modinit then achievements.onInit(); modinit = true end end) -- this is just to make sure the mod initializes at the right time, preventing nil achievements
+mod:AddCallback(ModCallbacks.MC_POST_RENDER, function(_) if not modinit then achievements.onInit(); modinit = true end end)
+mod:AddCallback(ModCallbacks.MC_POST_GAME_STARTED, achievements.checkUnlock)
+
+
 
 
 print("Lovesick Loaded, V.".. Version)
