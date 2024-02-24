@@ -63,10 +63,11 @@ function Faithfull:postPlayerRender(player, Offset)
                 end
             end
         end
+        print("Adrenaline rn: ", RickValues.Adrenaline)
         if RickValues.IsAdrenalineActive then
             player:AddCacheFlags(CacheFlag.CACHE_DAMAGE,true)
             RickValues.Adrenaline = math.max(RickValues.Adrenaline -10,0)
-            if RickValues.Adrenaline <= 0 then RickValues.IsAdrenalineActive = false end
+            if RickValues.Adrenaline <= 0 then RickValues.IsAdrenalineActive = false print("AdrenalineRunOut") end
         end
     end
     RickValues.Pulse.Time = Game():GetFrameCount()
@@ -114,7 +115,7 @@ function Faithfull:AdrenalineDMG(player,cacheFlag,itemStats)
     if player:GetPlayerType() ~= enums.PlayerType.Rick 
     or not getData:GetPlayerData(player).BaseRick.IsAdrenalineActive then return end
     if rd.HasBitFlags(cacheFlag, CacheFlag.CACHE_DAMAGE) then
-        itemStats.DAMAGE = itemStats.DAMAGE + math.floor(getData:GetPlayerData(player).BaseRick.Stress/100)
+        itemStats.DAMAGE = itemStats.DAMAGE + (2*(getData:GetPlayerData(player).BaseRick.Adrenaline/600))
 	end
 end
 
@@ -144,13 +145,19 @@ function Faithfull:postUpdate(player)
         if activeThreat > 0 then
             RickValues.CalmDelay = math.max(5,RickValues.CalmDelay)
         end
-        if charge < minCharge then
-            RickValues.Adrenaline = RickValues.Adrenaline + activeThreat
-        elseif maxCharge < charge then
-            RickValues.Adrenaline = RickValues.Adrenaline + activeThreat*0.5
+        local multiplier = 0.25
+        if minCharge~=maxCharge then
+            if charge < minCharge then
+                multiplier = multiplier*1
+            else multiplier = multiplier*0.5
+            end
         end
+        RickValues.Adrenaline = math.min(RickValues.Adrenaline + activeThreat*multiplier,600)        
         if RickValues.Pulse.Time%30 == 0 and Game():GetFrameCount() ~= RickValues.Pulse.Time then
             RickValues.Stress = math.min((RickValues.Stress + activeThreat * 0.5),RickValues.StressMax)
+            if RickValues.Adrenaline >= 150 and (player:GetNumKeys() > 0 or player:HasGoldenKey()) and activeThreat > 0 then
+                LOVESICK.HUD:FlashRedHearts(player)
+            end
         end
     end
 end
@@ -253,15 +260,15 @@ function Faithfull:entityTakeDamage(ent, amount, flags, source, countdown, playe
     local data = getData:GetPlayerData(player)
     local RickValues = data.BaseRick
     RickValues.CalmDelay = math.max(5,RickValues.CalmDelay)
-    if source.Type == 2 and (RickValues.LockShield <= 0 or RickValues.Adrenaline >= 0) then
+    if source.Type == 2 and (RickValues.LockShield <= 0 or not RickValues.IsAdrenalineActive) then
         if RickValues.Stress < RickValues.StressMax then
             RickValues.Stress = RickValues.Stress +  player.Damage*0.8
         end
-    elseif source.Type == 1 and (RickValues.LockShield <= 0 or RickValues.Adrenaline >= 0) then
+    elseif source.Type == 1 and (RickValues.LockShield <= 0 or not RickValues.IsAdrenalineActive) then
         if RickValues.Stress < RickValues.StressMax then
             RickValues.Stress = RickValues.Stress +  player.Damage*0.6
         end
-    elseif (RickValues.LockShield <= 0 or RickValues.Adrenaline == true) then
+    elseif (RickValues.LockShield <= 0 or not RickValues.IsAdrenalineActive) then
         if RickValues.Stress < RickValues.StressMax then
             RickValues.Stress = RickValues.Stress +  player.Damage*0.75
         end
@@ -274,6 +281,20 @@ function Faithfull:entityTakeDamage(ent, amount, flags, source, countdown, playe
     local pierceDMG = (math.floor(10+((RickValues.Stress-RickValues.StressMax/2)/6)))/10+(RickEntityData.Heartache/25)
     local stressDMG = math.max(0,(math.floor((RickValues.Stress)/6)/500) * (ent.MaxHitPoints - ent.HitPoints)/10)  
     if RickEntityData.Delay < ent.FrameCount then
+        if RickValues.IsAdrenalineActive then
+            local charge=player:GetActiveCharge(ActiveSlot.SLOT_POCKET)
+            local subcharge = player:GetBatteryCharge(ActiveSlot.SLOT_POCKET)
+            --print(charge,subcharge)
+            if player:HasCollectible(CollectibleType.COLLECTIBLE_BATTERY,false) then
+                if subcharge < 15 then
+                    player:SetActiveCharge(charge+subcharge+1, ActiveSlot.SLOT_POCKET)
+                end
+            else
+                if charge < 15 then
+                    player:SetActiveCharge(charge+1, ActiveSlot.SLOT_POCKET)
+                end
+            end
+        end
         if player:HasCollectible(CollectibleType.COLLECTIBLE_BIRTHRIGHT,true) then 
             ent:TakeDamage((amount * pierceDMG) + stressDMG, DamageFlag.DAMAGE_IGNORE_ARMOR, EntityRef(ent), 0)
             if ent:HasMortalDamage() or ent.HitPoints <= ((amount * pierceDMG) + stressDMG) then
@@ -289,7 +310,7 @@ function Faithfull:entityTakeDamage(ent, amount, flags, source, countdown, playe
                 end
                 --if newHeart ~= nil then newHeart:ToPickup().Timeout = 25 end
             end
-        elseif (ent:HasMortalDamage() or ent.HitPoints <= ((amount * pierceDMG) + stressDMG)) and RickValues.Adrenaline > 0 then
+        elseif (ent:HasMortalDamage() or ent.HitPoints <= ((amount * pierceDMG) + stressDMG)) and RickValues.IsAdrenalineActive then
                 ent:BloodExplode()
                 --game:BombDamage(ent.Position, player.Damage/2, 45, true, player, player.TearFlags | TearFlags.TEAR_FEAR, DamageFlag.DAMAGE_NOKILL, false)
                 local enemies = Isaac.FindInRadius(ent.Position, 40, EntityPartition.ENEMY)
