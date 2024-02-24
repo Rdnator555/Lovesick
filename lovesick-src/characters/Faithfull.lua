@@ -63,6 +63,11 @@ function Faithfull:postPlayerRender(player, Offset)
                 end
             end
         end
+        if RickValues.IsAdrenalineActive then
+            player:AddCacheFlags(CacheFlag.CACHE_DAMAGE,true)
+            RickValues.Adrenaline = math.max(RickValues.Adrenaline -10,0)
+            if RickValues.Adrenaline <= 0 then RickValues.IsAdrenalineActive = false end
+        end
     end
     RickValues.Pulse.Time = Game():GetFrameCount()
     RickValues.FPS.Current = (30/(RickValues.Stress/3) ) 
@@ -101,6 +106,16 @@ function Faithfull:postPlayerRender(player, Offset)
             Isaac.RenderText(tostring((math.floor(RickValues.Stress))),renderPos.X-7,renderPos.Y+8, r ,g ,b ,0.8)]]
         end
     end
+end
+---@param player EntityPlayer
+---@param cacheFlag CacheFlag
+---@param itemStats ItemStats
+function Faithfull:AdrenalineDMG(player,cacheFlag,itemStats)
+    if player:GetPlayerType() ~= enums.PlayerType.Rick 
+    or not getData:GetPlayerData(player).BaseRick.IsAdrenalineActive then return end
+    if rd.HasBitFlags(cacheFlag, CacheFlag.CACHE_DAMAGE) then
+        itemStats.DAMAGE = itemStats.DAMAGE + math.floor(getData:GetPlayerData(player).BaseRick.Stress/100)
+	end
 end
 
 function Faithfull:postUpdate(player)

@@ -1,4 +1,5 @@
 local rd = require("lovesick-src.RickHelper")
+local Faithfull = require("lovesick-src.characters.Faithfull")
 local evaluateCache = {}
 
 
@@ -38,7 +39,7 @@ function evaluateCache:main(player, cacheFlag)
 	}
 
 	--Player-specific stats
-
+	Faithfull:AdrenalineDMG(player, cacheFlag, itemStats)
 	--Item Stats
 
 	--Put together all stats
