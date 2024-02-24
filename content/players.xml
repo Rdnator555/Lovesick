@@ -1,13 +1,21 @@
 <players nameimageroot="gfx/ui/boss/" portraitroot="gfx/ui/stage/" root="gfx/characters/costumes/">
-	<player hp="2" keys="1" name="Rick" nameimage="playername_rick.png" portrait="playerportrait_rick.png" 
+	<player  bonehearts="2" redhearts="4" blackhearts="2" healthlimit="12"  speedmodifier="0.2" firedelaymodifier="0.8"
+	damagemodifier="-2.2" rangemodifier="2.5" shotspeedmodifier="0.2" luckmodifier="1"
+	name="Rick" nameimage="playername_rick.png" portrait="playerportrait_rick.png" 
 	skin="character_rick.png" skinColor="-1" birthright="Masochism Up" costume="33" costumeSuffix="Rick" />
-	<player hp="4" name="Rick_b" nameimage="playername_rick.png" portrait="playerportrait_rick.png" 
+	<player heartcontainers="4" speedmodifier="-0.1" firedelaymodifier="-0.2"
+	damagemodifier="1.2" rangemodifier="-2" shotspeedmodifier="-1.2" luckmodifier="-1"
+	name="Rick_b" nameimage="playername_rick.png" portrait="playerportrait_rick.png" 
 	skin="character_rick_old.png" skinColor="-1" birthright="Masochism Up" costume="33" costumeSuffix="Rick" bSkinParent="Rick" />
-	<player hp="2" keys="1" name="Snowball" nameimage="playername_snowball.png" portrait="playerportrait_snowball.png" 
+	<player heartcontainers="2" blackhearts="2" keys="1" speedmodifier="0.1" firedelaymodifier="0.3"
+	damagemodifier="-0.3" rangemodifier="1" shotspeedmodifier="0" luckmodifier="-1"
+	name="Snowball" nameimage="playername_snowball.png" portrait="playerportrait_snowball.png" 
 	skin="SnowBall_Body_.png" skinColor="-1" birthright="Ragdoll" costume="33" costumeSuffix="Snowball" />
 </players>
 <!--
-	<player hp="2" black="1" bombs="1" name="Rick_b" nameimage="playername_rick.png" portrait="playerportrait_rick.png" skin="character_rick.png" skinColor="-1" bSkinParent="Rick" birthright="This ain't my heart.."/>
+	speedmodifier="0.2" firedelaymodifier="0.8"
+	damagemodifier="-2.2" rangemodifier="50" shotspeedmodifier="0.2" luckmodifier="1"
+	<player heartcontainers="2" blackhearts="1" bombs="1" name="Rick_b" nameimage="playername_rick.png" portrait="playerportrait_rick.png" skin="character_rick.png" skinColor="-1" bSkinParent="Rick" birthright="This ain't my heart.."/>
 	IMPORTANT:
 	THE BASE GAME DOES NOT USE DIFFERENT CHARACTER NAMES FOR THE TAINTED AND NON-TAINTED VARIANT OF A CHARACTER.
 	THIS TEMPLATE SIMPLY OFFERS TO THE ABILITY TO DO SO. IT IS HIGHLY RECOMMENDED TO NAME BOTH CHARACTERS THE SAME THING!
@@ -46,9 +54,9 @@
 	"5": "White"
 	
 	other valid tags are:
-	hp="2" this is how much hp the character starts with, every 2 is 1 red heart.
+	heartcontainers="2" this is how much heartcontainers the character starts with, every 2 is 1 red heart.
 	armor="1" this is how many soul hearts the character starts with, every 2 is 1 soul heart
-	black="1" this is how many black hearts the character starts with, every 2 is 1 black heart
+	blackhearts="1" this is how many black hearts the character starts with, every 2 is 1 black heart
 	coins="1" this is how many coins the character starts with
 	bombs="1" this is how many bombs the character starts with
 	keys="1" this is how many keys the character starts with

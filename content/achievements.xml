@@ -1,6 +1,7 @@
 <achievements gfxroot="gfx/ui/achievement/">
+	<achievement name="Big Fuse Unlock" 		gfx="achievement__lockedheart.png" 		conditiontype="completionmark" conditionvalue="MOMS_HEART" 		conditioncharacter="Rick"/>			
 	<achievement name="Locked Heart Unlock" 	gfx="achievement__lockedheart.png" 		conditiontype="completionmark" conditionvalue="ISAAC" 			conditioncharacter="Rick"/>			
-	<achievement name="Locked Heart Tough Up" 	gfx="achievement__lockedheart2.png" 	conditiontype="completionmark" conditionvalue="BLUE_BABY" 		conditioncharacter="Rick"/>
+	<achievement name="Locked Heart Upgrade" 	gfx="achievement__lockedheart2.png" 	conditiontype="completionmark" conditionvalue="BLUE_BABY" 		conditioncharacter="Rick"/>
 	<achievement name="Arrest Warrant Unlock" 	gfx="achievement_arrest_warrant.png" 	conditiontype="completionmark" conditionvalue="BEAST" 			conditioncharacter="Rick"/>
 	<achievement name="Birthday Cake Unlock" 	gfx="achievement_birthday_cake.png" 	conditiontype="completionmark" conditionvalue="MOTHER" 			conditioncharacter="Rick"/>
 	<achievement name="Box of Leftovers Unlock" gfx="achievement_box_of_leftovers.png" 	conditiontype="completionmark" conditionvalue="MEGA_SATAN" 		conditioncharacter="Rick"/>
@@ -10,6 +11,20 @@
 	<achievement name="Neck Gaiter Unlock" 		gfx="achievement_neck_gaiter.png" 		conditiontype="completionmark" conditionvalue="SATAN" 			conditioncharacter="Rick"/>
 	<achievement name="Painting Kit Unlock" 	gfx="achievement_painting_kit.png" 		conditiontype="completionmark" conditionvalue="LAMB" 			conditioncharacter="Rick"/>
 	<achievement name="Paper Rose Unlock"		gfx="achievement_paper_rose.png" 		conditiontype="completionmark" conditionvalue="BOSS_RUSH" 		conditioncharacter="Rick"/>
-	<achievement name="Sleeping Pills Unlock" 	gfx="achievement_sleeping_pills.png" 	conditiontype="completionmark" conditionvalue="ALL" 			conditioncharacter="Rick"/>
 	<achievement name="Sunset Clock Unlock" 	gfx="achievement_sunset_clock.png" 		conditiontype="completionmark" conditionvalue="DELIRIUM" 		conditioncharacter="Rick"/>
+	<achievement name="Sleeping Pills Unlock" 	gfx="achievement_sleeping_pills.png">
+			<condition conditiontype="achievement" conditionvalue="Big Fuse Unlock" 		 conditioncharacter="Rick"/>
+			<condition conditiontype="achievement" conditionvalue="Locked Heart Unlock" 	 conditioncharacter="Rick"/>
+			<condition conditiontype="achievement" conditionvalue="Locked Heart Upgrade" 	 conditioncharacter="Rick"/>
+			<condition conditiontype="achievement" conditionvalue="Arrest Warrant Unlock" 	 conditioncharacter="Rick"/>
+			<condition conditiontype="achievement" conditionvalue="Birthday Cake Unlock" 	 conditioncharacter="Rick"/>
+			<condition conditiontype="achievement" conditionvalue="Box of Leftovers Unlock"  conditioncharacter="Rick"/>
+			<condition conditiontype="achievement" conditionvalue="Kind Soul Unlock" 		 conditioncharacter="Rick"/>
+			<condition conditiontype="achievement" conditionvalue="Love Letter Unlock" 		 conditioncharacter="Rick"/>
+			<condition conditiontype="achievement" conditionvalue="Morphine Unlock" 		 conditioncharacter="Rick"/>
+			<condition conditiontype="achievement" conditionvalue="Neck Gaiter Unlock" 		 conditioncharacter="Rick"/>
+			<condition conditiontype="achievement" conditionvalue="Painting Kit Unlock" 	 conditioncharacter="Rick"/>
+			<condition conditiontype="achievement" conditionvalue="Paper Rose Unlock"		 conditioncharacter="Rick"/>
+			<condition conditiontype="achievement" conditionvalue="Sunset Clock Unlock" 	 conditioncharacter="Rick"/>
+	</achievement>
 </achievements>
