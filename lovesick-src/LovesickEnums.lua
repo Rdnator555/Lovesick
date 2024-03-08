@@ -8,6 +8,7 @@ LOVESICK.sfx = SFXManager()
 LOVESICK.shouldSaveData = false
 LOVESICK.Name = "Lovesick v2"
 LOVESICK.HUD = LOVESICK.game:GetHUD()
+LOVESICK.debug = false
 
 LOVESICK.RunSeededRNG = RNG()
 
@@ -55,7 +56,7 @@ LOVESICK.PERSISTENT_DATA = LOVESICK.PERSISTENT_DATA ~= nil and LOVESICK.PERSISTE
 LOVESICK.LastSaveSlotLoaded = LOVESICK.LastSaveSlotLoaded or 1
 LOVESICK.HasLoadedSaves = LOVESICK.HasLoadedSaves or false
 
----@enum EeveeAchievement
+---@enum LovesickAchievement
 LOVESICK.Achievement = {
     BIG_FUSE_UNLOCK = Isaac.GetAchievementIdByName("Big Fuse Unlock"),
 	LOCKED_HEART_UNLOCK = Isaac.GetAchievementIdByName("Locked Heart Unlock"),
@@ -138,7 +139,7 @@ LOVESICK.NameToMark = {
 	["Beast"] = CompletionType.BEAST
 }
 
----@enum EeveeCard
+---@enum LovesickCard
 LOVESICK.Card = {
 	TEA = Isaac.GetCardIdByName("Tea"),
 	APPPLE_JUICE = Isaac.GetCardIdByName("Great Ball"),
@@ -148,7 +149,7 @@ LOVESICK.Card = {
 	ENERGETIC_DRINK = Isaac.GetCardIdByName("Water Stone"),
 }
 
----@enum EeveeChallenge
+---@enum LovesickChallenge
 LOVESICK.Challenge = {
 	--POKEY_MANS_CRYSTAL = Isaac.GetChallengeIdByName("Pokey Mans: Crystal")
 }
@@ -157,7 +158,7 @@ LOVESICK.ChallengeToAchievement = {
 	--[LOVESICK.Challenge.POKEY_MANS_CRYSTAL] = LOVESICK.Achievement.POKE_STOP
 }
 
----@enum EeveeCollectibleType
+---@enum LovesickCollectibleType
 LOVESICK.CollectibleType = {
 	LOCKED_HEART = Isaac.GetItemIdByName("Locked Heart"),
     MORPHINE = Isaac.GetItemIdByName("Morphine"),
@@ -196,7 +197,7 @@ LOVESICK.ColorCycle = {
     FORTUNE = 7,
 }
 
----@enum EeveeEffectVariant
+---@enum LovesickEffectVariant
 LOVESICK.EffectVariant = {
 	--CUSTOM_BRIMSTONE_SWIRL = Isaac.GetEntityVariantByName("[EV] Custom Brimstone Swirl"),
 }
@@ -207,7 +208,7 @@ LOVESICK.AttackReticleSubtype = {
 }
 
 
----@enum EeveeFamiliarVariant
+---@enum LovesickFamiliarVariant
 LOVESICK.FamiliarVariant = {
 	--LIL_EEVEE = Isaac.GetEntityVariantByName("Lil Eevee"),
 }
@@ -289,7 +290,7 @@ LOVESICK.PatchType ={
 	"VelocityPatch"
 }
 
----@enum EeveePlayerType
+---@enum LovesickPlayerType
 LOVESICK.PlayerType = {
     Rick = Isaac.GetPlayerTypeByName("Rick"),
     Rickb = Isaac.GetPlayerTypeByName("Rick",true),
@@ -337,39 +338,23 @@ LOVESICK.SantuarySubType = {
 	RUINS = Isaac.GetEntitySubTypeByName("Ruined Santuary"),
 }
 
----@enum EeveeSoundEffect
+---@enum LovesickSoundEffect
 LOVESICK.SoundEffect = {
 	--SWIFT_FIRE = Isaac.GetSoundIdByName("Swift Fire")
 }
 
 LOVESICK.Sprite = {
-	LevelBar = Sprite("gfx/render_lileevee_xpbar.anm2"),
-	KecleonDialogueBox = Sprite("gfx/ui_kecleon_dialoguebox.anm2"),
-	JobBoard = Sprite("gfx/ui_job_board.anm2"),
-	JobBoardPapers = boardPapers,
-	JobBoardPaperNames = boardPaperNames,
-	JobBoardPaperBig = Sprite("gfx/ui_job_board.anm2"),
-	JobBoardIcons = Sprite("gfx/ui_job_board_icons.anm2"),
-	JobBoardIcons_Objective = Sprite("gfx/ui_job_hud_icons.anm2"),
-	JobMiniHUD_Normal = Sprite("gfx/ui_job_hud_icons.anm2"),
+	--JobMiniHUD_Normal = Sprite("gfx/ui_job_hud_icons.anm2"),
 }
 
-LOVESICK.Sprite.LevelBar:SetFrame("Main", 0)
-LOVESICK.Sprite.KecleonDialogueBox:SetFrame("Idle", 0)
-LOVESICK.Sprite.JobBoard.PlaybackSpeed = 0.5
-LOVESICK.Sprite.JobBoardPaperBig.PlaybackSpeed = 0.5
-LOVESICK.Sprite.JobBoardIcons:SetFrame("Idle", 0)
-LOVESICK.Sprite.JobBoardIcons_Objective:SetFrame("Idle", 0)
-LOVESICK.Sprite.JobMiniHUD_Normal:SetFrame("Idle", 0)
-
----@enum EeveeTrinketType
+---@enum LovesickTrinketType
 LOVESICK.TrinketType = {
 	PAPER_ROSE = Isaac.GetTrinketIdByName("Paper Rose"),
     BIG_FUSE = Isaac.GetTrinketIdByName("Big Fuse"),
     OLD_DRAWING = Isaac.GetTrinketIdByName("Old Drawing"),
 }
 
----@enum EeveeTearVariant
+---@enum LovesickTearVariant
 LOVESICK.TearVariant = {
 	--WONDERCOIN = Isaac.GetEntityVariantByName("Wonder Coin Tear"),
 }

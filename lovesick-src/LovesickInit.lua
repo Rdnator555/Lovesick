@@ -37,6 +37,7 @@ function mod:init(j)
 		"prePickupCollision",	--Check
 		"prePlayerCollision",	--Check
 		"useItem",				--Check
+		"postGameStarted",		--Check
 
 		--[[
 		"useCard",
@@ -44,7 +45,6 @@ function mod:init(j)
 		"familiarUpdate",
 		"usePill",
 		"inputAction",
-		"postGameStarted",
 		"preGameExit",
 		"preUseItem",
 		"postFamiliarRender",
@@ -81,7 +81,9 @@ function mod:init(j)
     }
     
     local repentogonCallbacks = {
-
+		"postSaveSlotLoad",
+		"preCompletionEvent",
+		"prePlayerRender",
     }
 
     local callbackTypes = {
@@ -98,10 +100,10 @@ function mod:init(j)
 	}
 
 	for i, table in ipairs (callbackTypes) do
-		print("CallbackTypes: "..i)
+		if LOVESICK.debug then print("CallbackTypes: "..i) end
 		local path = path..pathTypes[i]
 		for _, fileName in ipairs (table) do 
-			print(path..fileName)
+			if LOVESICK.debug then print(path..fileName) end
 			local callback = require(path..fileName) callback:init(mod)
 		end
 	end

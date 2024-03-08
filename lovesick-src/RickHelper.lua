@@ -1,3 +1,5 @@
+local enums = require("lovesick-src.LovesickEnums")
+
 local RD= {}
 local refCollectible1, refCollectible2 = CollectibleType.COLLECTIBLE_ANARCHIST_COOKBOOK, CollectibleType.COLLECTIBLE_LAZARUS_RAGS
 local game = Game()
@@ -97,6 +99,35 @@ function RD.GetAllPlayers()
 		table.insert(players, Isaac.GetPlayer(i))
 	end
 	return players
+end
+
+--from epiphany mod, thanks and all credit to them of this function
+---@param pickup EntityPickup
+function RD.PickupKill(pickup) 
+    pickup.EntityCollisionClass = 0
+    pickup:PlayPickupSound()
+    pickup:Remove()    
+    pickup.Velocity = Vector(0, 0)    
+    local effect = Isaac.Spawn(EntityType.ENTITY_EFFECT, EffectVariant.POOF01, 0, pickup.Position, Vector.Zero, nil):ToEffect()
+    effect.Timeout = pickup.Timeout
+    local sprite = effect:GetSprite()
+    sprite:Load(pickup:GetSprite():GetFilename(), true)
+    sprite:Play("Collect", true)
+    pickup:Remove()
+end
+
+function RD:CheckLockedCollectible()
+    for name, collectibleType in pairs(enums.CollectibleType) do
+		print(collectibleType)
+		if collectibleType == -1 then return end
+        if type(collectibleType) == "table" then
+            for name, collectibleSubType in pairs(collectibleType) do
+                print(name,": ",LOVESICK.game:GetItemPool():CanSpawnCollectible(collectibleSubType, false))
+            end
+        else
+            print(name,": ",LOVESICK.game:GetItemPool():CanSpawnCollectible(collectibleType, false))
+        end
+    end
 end
 
 return RD

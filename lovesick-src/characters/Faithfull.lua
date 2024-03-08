@@ -12,9 +12,45 @@ function Faithfull:postPlayerUpdate(player)
 end
 
 function Faithfull:postPlayerInit(player)
+    if player:GetPlayerType() ~= enums.PlayerType.Rick then return end
     player:SetPocketActiveItem(Isaac.GetItemIdByName("Locked Heart"), SLOT_POCKET, false)
     player:AddSmeltedTrinket(TrinketType.TRINKET_CROW_HEART, false)
     player:AddInnateCollectible(CollectibleType.COLLECTIBLE_GLAUCOMA, 1)
+end
+
+
+---@param player EntityPlayer
+---@param Offset Vector
+function Faithfull:prePlayerRender(player, Offset)
+    if player:GetPlayerType() ~= enums.PlayerType.Rick then return end
+    local renderPos
+    if LOVESICK.room:IsMirrorWorld() then 
+        renderPos = Vector(480-Isaac.WorldToScreen(player.Position).X,Isaac.WorldToScreen(player.Position).Y) 
+    else
+        renderPos = Isaac.WorldToScreen(player.Position) 
+    end
+    local data = getData:GetPlayerData(player)
+    local AdrenalineGauge = data.BaseRick.AdrenalineGauge.Sprite
+    local color = data.BaseRick.AdrenalineGauge.Color
+    Faithfull:ChangeGaugeColor(player)
+    AdrenalineGauge:Render(Vector(renderPos.X,renderPos.Y), Vector(0,0), Vector(0,0))
+    AdrenalineGauge.Color =  color
+    if not Game():IsPaused() then 
+        AdrenalineGauge:Update()
+    end
+end
+
+function Faithfull:ChangeGaugeColor(player)
+    local data = getData:GetPlayerData(player)
+    local AdrenalineValue = data.BaseRick.Adrenaline
+    local newColor = Color(0,1,0,1)
+    if AdrenalineValue >= 150 then
+        newColor.A = 1
+    else
+        newColor.A = AdrenalineValue/150 * 0.5 
+    end
+    newColor = Color.Lerp(newColor,Color(1,0,0,newColor.A),(AdrenalineValue-150)/450)
+    data.BaseRick.AdrenalineGauge.Color = newColor
 end
 
 ---@param player EntityPlayer
@@ -34,11 +70,12 @@ function Faithfull:postPlayerRender(player, Offset)
         renderPos = Isaac.WorldToScreen(player.Position) 
     end
     Pulse:Render(Vector(renderPos.X,renderPos.Y + 9 ), Vector(0,0), Vector(0,0))
+
+    --print(Pulse:GetAnimation(),AdrenalineGauge:GetAnimation())
     if data.BaseRick.LockShield > 0 then 
         Faithfull.shielSpriteUpdate(player)
         Shield:Render(Vector(renderPos.X,renderPos.Y -24 ), Vector(0,0), Vector(0,0)) 
-        Shield:Update()
-    end
+    end    
 
     if LOVESICK.level:GetStage() >= 7 and LOVESICK.persistentGameData:Unlocked(enums.Achievement.LOCKED_HEART_UPGRADE) == true then 
         defaultDMG = 2 else defaultDMG = 1 
@@ -63,7 +100,7 @@ function Faithfull:postPlayerRender(player, Offset)
                 end
             end
         end
-        print("Adrenaline rn: ", RickValues.Adrenaline)
+        if LOVESICK.debug then print("Adrenaline rn: ", RickValues.Adrenaline) end
         if RickValues.IsAdrenalineActive then
             player:AddCacheFlags(CacheFlag.CACHE_DAMAGE,true)
             RickValues.Adrenaline = math.max(RickValues.Adrenaline -10,0)
@@ -75,6 +112,7 @@ function Faithfull:postPlayerRender(player, Offset)
     RickValues.FPS.New = math.floor(RickValues.Pulse.Time/RickValues.FPS.Current)
     --RickValues.Color = 
     if not Game():IsPaused() then
+        Shield:Update()
         if RickValues.FPS.New ~= RickValues.FPS.Old then
             Faithfull.heartBeat(player)
             RickValues.FPS.Old = RickValues.FPS.New

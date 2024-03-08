@@ -70,7 +70,7 @@ if Isaac.IsInGame() then
 			getDataInit:main(validEnt)
 		end
 	end
-	print("[Lovesick] Temporary Data reloaded")
+	if LOVESICK.debug then print("[Lovesick] Temporary Data reloaded") end
 end
 
 

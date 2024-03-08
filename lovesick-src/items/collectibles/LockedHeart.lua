@@ -7,7 +7,6 @@ local LockedHeart = {}
 
 function LockedHeart:useItem(item, itemRNG, player, flags, slot, varData)
     if item ~= enums.CollectibleType.LOCKED_HEART then return end
-    print("lockedheartuse")
     local data = getData:GetPlayerData(player)
     local RickValues = data.BaseRick
     local stage = LOVESICK.level:GetStage()
@@ -29,10 +28,9 @@ function LockedHeart:useItem(item, itemRNG, player, flags, slot, varData)
                 ActiveEnemies = ActiveEnemies + 1
             end
         end
-        print((player:GetNumKeys() > 0  or player:HasGoldenKey()),ActiveEnemies>0,RickValues.Adrenaline>150)
-        if (player:GetNumKeys() > 0  or player:HasGoldenKey()) and  ActiveEnemies>0 and RickValues.Adrenaline>150 then
+        if (player:GetNumKeys() > 0  or player:HasGoldenKey()) and  ActiveEnemies>0 and RickValues.Adrenaline>150 and not RickValues.IsAdrenalineActive then
             if not player:HasGoldenKey() then player:AddKeys(-1) end
-            print("ADRENALINEMUSTRUN")
+            if LOVESICK.debug then print("ADRENALINEMUSTRUN") end
             LOVESICK.HUD:ShowItemText(tostring("The heart of player "..(playerNum+1).." rushes"), "Pulse Breakdown!", false)
             local charge=player:GetActiveCharge(ActiveSlot.SLOT_POCKET)        
             local subcharge = player:GetBatteryCharge(ActiveSlot.SLOT_POCKET)
@@ -56,7 +54,11 @@ function LockedHeart:useItem(item, itemRNG, player, flags, slot, varData)
             end
         end
     end
-    return true
+    return  {
+        Discharge = true,
+        Remove = false,
+        ShowAnim = true,
+    }
 end
 
 return LockedHeart

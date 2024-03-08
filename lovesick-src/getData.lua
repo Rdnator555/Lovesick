@@ -173,9 +173,14 @@ local PickupData = {
 ---@field Sprite Sprite
 ---@field Time integer
 
+---@class AdrenalineGauge
+---@field Sprite Sprite
+---@field Color Color
+
 ---@class RickData
 ---@field Pulse PulseData
 ---@field Shield ShieldData
+---@field AdrenalineGauge AdrenalineGauge
 ---@field StressMax integer
 ---@field Stress integer
 ---@field ShowPulseTime integer
@@ -185,6 +190,7 @@ local PickupData = {
 ---@field Adrenaline integer
 ---@field IsAdrenalineActive boolean
 ---@field Color Color
+
 
 ---@class MorphineData
 ---@field Time integer
@@ -205,6 +211,10 @@ local PlayerData = {
 		Shield = {
 			Sprite = Sprite("gfx/ui/other/Shield.anm2"),
 			Time = 0,
+		},
+		AdrenalineGauge = {
+			Sprite = Sprite("gfx/ui/other/Adrenaline_Gauge.anm2"),
+			Color = Color.Default
 		},
 		StressMax = 240,
 		Stress = 120,
@@ -227,6 +237,7 @@ local PlayerData = {
 }
 PlayerData.BaseRick.Pulse.Sprite:Play("Low Stress", true)
 PlayerData.BaseRick.Shield.Sprite:Play("1", true)
+PlayerData.BaseRick.AdrenalineGauge.Sprite:Play("Idle", true)
 -------------------
 --  PROJECTILES  --
 -------------------

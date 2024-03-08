@@ -9,6 +9,7 @@ local useItem = {}
 ---@param slot ActiveSlot
 ---@param varData integer
 function useItem:main(itemID, itemRNG, player, flags, slot, varData)
+	
 	local functions = {
 		LockedHeart:useItem(itemID, itemRNG, player, flags, slot, varData)
 	}
